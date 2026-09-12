@@ -38,6 +38,24 @@ const teacherSchema = new mongoose.Schema({
   },
 });
 
+
+// Compound indexes for fast query resolution
+teacherSchema.index({ email: 1, phone: 1 });
+teacherSchema.index({ subjectSpecialization: 1 });
+teacherSchema.index({ role: 1 });
+
+// Multi-field credential lookup helper
+teacherSchema.statics.findByCredentials = function (identifier) {
+  return this.findOne({
+    $or: [{ email: identifier }, { phone: isNaN(identifier) ? undefined : Number(identifier) }],
+  });
+};
+
+// Instance method to check profile completeness
+teacherSchema.methods.isProfileComplete = function () {
+  return Boolean(this.fullName && this.email && this.phone && this.subjectSpecialization);
+};
+
 const teacherModel = mongoose.model("Teacher", teacherSchema);
 
 module.exports =  teacherModel;

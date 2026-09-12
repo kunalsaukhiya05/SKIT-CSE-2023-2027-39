@@ -42,6 +42,24 @@ const studentSchema = new mongoose.Schema({
   },
 });
 
+
+// Compound indexes for fast query resolution
+studentSchema.index({ email: 1, phone: 1 });
+studentSchema.index({ course: 1, currentYear: 1 });
+studentSchema.index({ role: 1 });
+
+// Multi-field credential lookup helper
+studentSchema.statics.findByCredentials = function (identifier) {
+  return this.findOne({
+    $or: [{ email: identifier }, { phone: isNaN(identifier) ? undefined : Number(identifier) }],
+  });
+};
+
+// Instance method to check profile completeness
+studentSchema.methods.isProfileComplete = function () {
+  return Boolean(this.fullName && this.email && this.phone && this.course && this.currentYear);
+};
+
 const studentModel = mongoose.model("Student", studentSchema);
 
 module.exports = studentModel;
