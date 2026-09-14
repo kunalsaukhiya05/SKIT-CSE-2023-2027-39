@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const studentModel = require("../models/student.model");
 
 const authStudentToken = async (req, res, next) => {
   try {
@@ -24,6 +25,13 @@ const authStudentToken = async (req, res, next) => {
 
     // 5. Attach user ID to request
     req.studentId = decoded.id;
+
+    // 6. Verify student exists in database and attach session user [Manish Regar]
+    const student = await studentModel.findById(decoded.id).select("-password");
+    if (!student) {
+      return res.status(401).json({ error: "Session invalid: Student account not found" });
+    }
+    req.student = student;
 
     // 6. Continue
     next();
