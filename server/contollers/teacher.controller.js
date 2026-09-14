@@ -114,6 +114,7 @@ const teacherLogin = async (req,res) => {
 }
 
 
+// Session Status & Token Verification [Kunal Saukhiya]
 const teacherDetails = async (req,res) => {
     try{
         const teacherId = req.teacherId;
