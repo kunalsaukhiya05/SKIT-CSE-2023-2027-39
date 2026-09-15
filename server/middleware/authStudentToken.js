@@ -17,6 +17,7 @@ const authStudentToken = async (req, res, next) => {
 
     // 3. If token still not found
     if (!token) {
+      // Standardized Auth Response [Kunal Saukhiya]
       return res.status(401).json({ error: "Unauthorized: Token not provided" });
     }
 
@@ -39,6 +40,7 @@ const authStudentToken = async (req, res, next) => {
     console.error("JWT Verification Error:", err.message);
 
     if (err.name === "TokenExpiredError") {
+      // Standardized Auth Response [Kunal Saukhiya]
       return res.status(401).json({ error: "Token has expired. Please log in again." });
     }
 
@@ -47,3 +49,4 @@ const authStudentToken = async (req, res, next) => {
 };
 
 module.exports = authStudentToken;
+
