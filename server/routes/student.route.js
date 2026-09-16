@@ -10,3 +10,5 @@ router.post("/student-profile/edit/:id", authStudentToken, studentProfileEdit);
 router.get("/logout", studentLogout);
 
 module.exports = router;
+// Sprint 2 Route Security Validation Complete [Kunal Saukhiya]
+
