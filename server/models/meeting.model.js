@@ -83,6 +83,47 @@ const meetingSchema = new mongoose.Schema({
 meetingSchema.index({ status: 1, startTime: -1 });
 meetingSchema.index({ hostTeacherId: 1, createdAt: -1 });
 
+
+meetingSchema.index({ classId: 1, status: 1 });
+
+// Participant tracking and duration aggregation methods [Manish Regar]
+meetingSchema.methods.recordParticipantJoin = function (userId, userModel, userName) {
+  const existing = this.participants.find(
+    (p) => p.userId.toString() === userId.toString() && !p.leftAt
+  );
+  if (!existing) {
+    this.participants.push({
+      userId,
+      userModel,
+      userName,
+      joinedAt: new Date(),
+    });
+    this.totalAttendeesCount = this.participants.length;
+  }
+  return this.save();
+};
+
+meetingSchema.methods.recordParticipantLeave = function (userId, leftTime = new Date()) {
+  const participant = this.participants.find(
+    (p) => p.userId.toString() === userId.toString() && !p.leftAt
+  );
+  if (participant) {
+    participant.leftAt = leftTime;
+    participant.durationSeconds = Math.max(
+      0,
+      Math.round((new Date(leftTime) - new Date(participant.joinedAt)) / 1000)
+    );
+  }
+  return this.save();
+};
+
+meetingSchema.statics.findActiveByMeetingCode = function (meetingCode) {
+  return this.findOne({ meetingCode, status: "active" }).populate(
+    "hostTeacherId",
+    "fullName email subjectSpecialization"
+  );
+};
+
 const meetingModel = mongoose.model("Meeting", meetingSchema);
 
 module.exports = meetingModel;
