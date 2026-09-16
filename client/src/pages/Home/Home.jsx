@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import ChatICON from "../../components/ChatICON";
-import AIChatbot from "../AIChatBot/AIChatBot";
 
 import StudentHomeContent from "./StudentHomeContent";
 import TeacherHomeContent from "./TeacherHomeContent";
+
+const ChatICON = () => <></>;
+const AIChatbot = () => <></>;
 
 export default function Home() {
   const student = useSelector((state) => state?.student?.student);
@@ -134,3 +135,5 @@ export default function Home() {
     </div>
   );
 }
+
+

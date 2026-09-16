@@ -5,20 +5,14 @@ import Signup from "./pages/auth/Signup";
 import Login from "./pages/auth/Login";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
-import Classroom from "./pages/Classroom";
 import TeacherSingup from "./pages/auth/TeacherSingup";
 import TeacherLogin from "./pages/auth/TeacherLogin";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import CreateClassForm from "./pages/dashboard/CreateClassForm";
 import StudentProfile from "./pages/profile/StudentProfile";
 import TeacherProfile from "./pages/profile/TeacherProfile";
 import EditStudentProfile from "./pages/profile/EditStudentProfile";
 import TeacherProfileEdit from "./pages/profile/TeacherProfileEdit";
-import TeacherAssignments from "./pages/resourses/TeacherAssignments";
-import StudentAssignment from "./pages/resourses/StudentAssignment";
-import TeacherResources from "./pages/resourses/TeacherResourse";
-import StudentResources from "./pages/resourses/StudentResources";
 import { setStudentDetails } from "./store/studentSlice";
 import { setTeacherDetails } from "./store/teacherSlice";
 import { useDispatch } from "react-redux";
@@ -27,12 +21,19 @@ import { toast } from "react-hot-toast";
 import Context from "./context/context";
 
 // Lazy-loaded pages (Priority 8: code splitting for performance)
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
-const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
-const StudentAttendance = lazy(() => import("./pages/attendance/StudentAttendance"));
-const TeacherAttendance = lazy(() => import("./pages/attendance/TeacherAttendance"));
-const NotificationsPage = lazy(() => import("./pages/notifications/NotificationsPage"));
 
+// Placeholders for future sprints
+const Classroom = () => <div className="p-10 text-center text-xl font-semibold">Classroom Module (Coming Soon)</div>;
+const CreateClassForm = () => <div className="p-10 text-center text-xl font-semibold">Create Class Module (Coming Soon)</div>;
+const TeacherAssignments = () => <div className="p-10 text-center text-xl font-semibold">Assignments Module (Coming Soon)</div>;
+const StudentAssignment = () => <div className="p-10 text-center text-xl font-semibold">Student Assignments (Coming Soon)</div>;
+const TeacherResources = () => <div className="p-10 text-center text-xl font-semibold">Resources Module (Coming Soon)</div>;
+const StudentResources = () => <div className="p-10 text-center text-xl font-semibold">Resources Module (Coming Soon)</div>;
+const AdminDashboard = () => <div className="p-10 text-center text-xl font-semibold">Admin Dashboard (Coming Soon)</div>;
+const AdminLogin = () => <div className="p-10 text-center text-xl font-semibold">Admin Login (Coming Soon)</div>;
+const StudentAttendance = () => <div className="p-10 text-center text-xl font-semibold">Student Attendance (Coming Soon)</div>;
+const TeacherAttendance = () => <div className="p-10 text-center text-xl font-semibold">Teacher Attendance (Coming Soon)</div>;
+const NotificationsPage = () => <div className="p-10 text-center text-xl font-semibold">Notifications (Coming Soon)</div>;
 // Loading fallback component
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -139,3 +140,5 @@ function App() {
 }
 
 export default App;
+
+
