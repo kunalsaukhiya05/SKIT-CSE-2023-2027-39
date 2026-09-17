@@ -7,6 +7,8 @@ const ClassSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   duration: { type: Number, default: 60 }, // minutes
   roomId: { type: String },
+  maxCapacity: { type: Number, default: 100 },
+  isLive: { type: Boolean, default: false },
   teacherId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Teacher",
@@ -28,6 +30,25 @@ const ClassSchema = new mongoose.Schema({
 ClassSchema.index({ teacherId: 1 });
 ClassSchema.index({ date: -1 });
 ClassSchema.index({ status: 1 });
+
+
+ClassSchema.index({ teacherId: 1, status: 1 });
+
+// Classroom enrollment methods [Manish Regar]
+ClassSchema.methods.isStudentEnrolled = function (studentId) {
+  return this.students.some((id) => id.toString() === studentId.toString());
+};
+
+ClassSchema.methods.enrollStudent = function (studentId) {
+  if (this.isStudentEnrolled(studentId)) {
+    return { success: false, message: "Student is already enrolled in this class" };
+  }
+  if (this.students.length >= (this.maxCapacity || 100)) {
+    return { success: false, message: "Classroom capacity reached" };
+  }
+  this.students.push(studentId);
+  return { success: true, message: "Student enrolled successfully" };
+};
 
 const classModel = mongoose.model("Class", ClassSchema);
 
