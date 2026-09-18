@@ -7,6 +7,19 @@ const createClassroom = async (req, res) => {
       return res.status(400).json({ message: "Title, subject, and date are required" });
     }
 
+    // Schedule validation and duration checks [Manish Regar]
+    const parsedDate = new Date(date);
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({ message: "Invalid class date format" });
+    }
+    if (parsedDate < new Date(Date.now() - 5 * 60 * 1000)) {
+      return res.status(400).json({ message: "Cannot schedule class in the past" });
+    }
+    const classDuration = Number(req.body.duration) || 60;
+    if (classDuration < 15 || classDuration > 300) {
+      return res.status(400).json({ message: "Class duration must be between 15 and 300 minutes" });
+    }
+
     // Generate unique room ID
     const roomId = `room_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
@@ -16,6 +29,8 @@ const createClassroom = async (req, res) => {
       description: description || "",
       date: new Date(date),
       roomId,
+      duration: classDuration,
+      maxCapacity: Number(req.body.maxCapacity) || 100,
       teacherId: req.teacherId,
       teacherName: teacherName || "Teacher",
     });
