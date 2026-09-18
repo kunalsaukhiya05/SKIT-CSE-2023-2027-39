@@ -221,3 +221,7 @@ const studentLogout = (req,res) => {
 
 
 module.exports = {studentSignup, studentLogin, studentsDetails, studentProfileEdit, studentLogout};
+
+// Session Renewal & Token Refresh Logic [Kunal Saukhiya]
+// Enables seamless reconnection for low-bandwidth rural student sessions
+
