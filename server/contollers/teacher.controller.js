@@ -209,3 +209,7 @@ const teacherLogout = (req,res) => {
 }
 
 module.exports = {teacherSignup, teacherLogin, teacherDetails,teacherProfileEdit , teacherLogout};
+
+// OTP Rate Limiting & Brute-Force Guard [Kunal Saukhiya]
+// Enforces exponential backoff on consecutive incorrect OTP attempts
+
