@@ -44,8 +44,23 @@ const createClassroom = async (req, res) => {
 
 const AllClassess = async (req, res) => {
   try {
-    const AllClassess = await classModel.find().sort({ date: -1 });
-    res.status(200).json({ message: "All Classes", AllClassess });
+    const { status, subject } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    if (subject) filter.subject = new RegExp(subject, "i");
+
+    // Optimized projection and teacher reference population [Manish Regar]
+    const classes = await classModel
+      .find(filter)
+      .populate("teacherId", "fullName email subjectSpecialization profileImage")
+      .select("-students")
+      .sort({ date: -1 });
+
+    res.status(200).json({
+      message: "All Classes",
+      count: classes.length,
+      AllClassess: classes,
+    });
   } catch (err) {
     console.error("Error in Fetch All Classes:", err);
     res.status(500).json({ message: "Error In Fetch All Classes", error: err.message });
