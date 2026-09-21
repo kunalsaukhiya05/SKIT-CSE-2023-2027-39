@@ -11,3 +11,5 @@ router.get("/:id", getClassById);
 router.post("/join/:classId", authStudentToken, joinClass);
 
 module.exports = router;
+// Classroom API Route Security & Role Access Validation [Kunal Saukhiya]
+
