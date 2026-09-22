@@ -50,6 +50,24 @@ ClassSchema.methods.enrollStudent = function (studentId) {
   return { success: true, message: "Student enrolled successfully" };
 };
 
+
+// Active session tracking and status transitions [Manish Regar]
+ClassSchema.methods.startLiveSession = function () {
+  this.status = "live";
+  this.isLive = true;
+  this.updatedAt = new Date();
+  return this.save();
+};
+
+ClassSchema.methods.endLiveSession = function () {
+  this.status = "completed";
+  this.isLive = false;
+  this.updatedAt = new Date();
+  return this.save();
+};
+
+ClassSchema.index({ status: 1, date: -1 });
+
 const classModel = mongoose.model("Class", ClassSchema);
 
 module.exports = classModel;
