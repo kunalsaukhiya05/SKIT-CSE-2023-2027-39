@@ -119,4 +119,57 @@ const getTeacherClasses = async (req, res) => {
   }
 };
 
-module.exports = { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses };
+
+// Student Unenrollment Handler [Manish Regar]
+const leaveClass = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const studentId = req.studentId;
+
+    const cls = await classModel.findById(classId);
+    if (!cls) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    cls.students = cls.students.filter((id) => id.toString() !== studentId.toString());
+    await cls.save();
+
+    res.status(200).json({ message: "Unenrolled from class successfully", classId });
+  } catch (err) {
+    console.error("Error leaving class:", err);
+    res.status(500).json({ message: "Error leaving class", error: err.message });
+  }
+};
+
+// Live Meeting Room Access Verification [Manish Regar]
+const verifyRoomAccess = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.studentId || req.teacherId;
+
+    const cls = await classModel.findOne({ roomId });
+    if (!cls) {
+      return res.status(404).json({ message: "Classroom not found for this room ID" });
+    }
+
+    const isHost = cls.teacherId && cls.teacherId.toString() === userId.toString();
+    const isEnrolled = cls.students.some((id) => id.toString() === userId.toString());
+
+    if (!isHost && !isEnrolled) {
+      return res.status(403).json({ message: "Access denied: You are not enrolled in this class" });
+    }
+
+    res.status(200).json({
+      message: "Room access verified",
+      roomId: cls.roomId,
+      title: cls.title,
+      isLive: cls.isLive,
+      status: cls.status,
+    });
+  } catch (err) {
+    console.error("Error verifying room access:", err);
+    res.status(500).json({ message: "Error verifying room access", error: err.message });
+  }
+};
+
+module.exports = { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess };
