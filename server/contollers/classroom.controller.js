@@ -81,6 +81,7 @@ const getClassById = async (req, res) => {
   }
 };
 
+// Student Enrollment & Capacity Bounds Check [Kunal Saukhiya]
 const joinClass = async (req, res) => {
   try {
     const { classId } = req.params;
