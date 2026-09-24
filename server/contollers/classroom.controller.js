@@ -174,4 +174,31 @@ const verifyRoomAccess = async (req, res) => {
   }
 };
 
-module.exports = { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess };
+
+// Classroom Summary & Analytics Aggregation [Manish Regar]
+const getClassroomStats = async (req, res) => {
+  try {
+    const teacherId = req.teacherId;
+    const teacherClasses = await classModel.find({ teacherId });
+
+    const totalClasses = teacherClasses.length;
+    const liveClasses = teacherClasses.filter((c) => c.status === "live").length;
+    const upcomingClasses = teacherClasses.filter((c) => c.status === "scheduled").length;
+    const totalEnrollments = teacherClasses.reduce((acc, c) => acc + (c.students?.length || 0), 0);
+
+    res.status(200).json({
+      message: "Classroom statistics fetched successfully",
+      stats: {
+        totalClasses,
+        liveClasses,
+        upcomingClasses,
+        totalEnrollments,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching classroom stats:", err);
+    res.status(500).json({ message: "Error fetching classroom stats", error: err.message });
+  }
+};
+
+module.exports = { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess, getClassroomStats };
