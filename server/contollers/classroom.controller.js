@@ -67,6 +67,7 @@ const AllClassess = async (req, res) => {
   }
 };
 
+// Classroom Details & Student Roster Populate [Kunal Saukhiya]
 const getClassById = async (req, res) => {
   try {
     const { id } = req.params;
