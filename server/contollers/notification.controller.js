@@ -117,4 +117,28 @@ const createAnnouncement = async (req, res) => {
   }
 };
 
-module.exports = { getNotifications, markAsRead, markAllAsRead, createAnnouncement };
+
+// Classroom Event Notification Dispatcher [Kunal Saukhiya]
+const getClassNotifications = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    if (!classId) {
+      return res.status(400).json({ message: "Class ID is required" });
+    }
+    const notifications = await notificationModel
+      .find({ classId })
+      .sort({ createdAt: -1 })
+      .limit(30);
+
+    return res.status(200).json({
+      message: "Class notifications fetched successfully",
+      notifications,
+    });
+  } catch (err) {
+    console.error("Error fetching class notifications:", err);
+    return res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { getClassNotifications,  getNotifications, markAsRead, markAllAsRead, createAnnouncement };
+
