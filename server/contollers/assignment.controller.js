@@ -267,7 +267,28 @@ const deleteAssignment = async (req, res) => {
   }
 };
 
-module.exports = {
+
+// Assignment Deadline Tracker & Status Filter [Rishabh Jain]
+const getPendingAssignmentsByClass = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const now = new Date();
+    const query = { deadline: { $gte: now } };
+    if (classId) {
+      query.classId = classId;
+    }
+    const pending = await assignmentModel.find(query).sort({ deadline: 1 }).limit(20);
+    return res.status(200).json({
+      message: "Pending assignments fetched successfully",
+      assignments: pending,
+    });
+  } catch (err) {
+    console.error("Error fetching pending assignments:", err);
+    return res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { getPendingAssignmentsByClass, 
   createAssignment,
   getAssignments,
   getAssignmentById,
@@ -277,3 +298,4 @@ module.exports = {
   gradeSubmission,
   deleteAssignment,
 };
+
