@@ -140,5 +140,32 @@ const getClassNotifications = async (req, res) => {
   }
 };
 
-module.exports = { getClassNotifications,  getNotifications, markAsRead, markAllAsRead, createAnnouncement };
+
+// Unread Notification Count Badge [Kunal Saukhiya]
+const getUnreadCount = async (req, res) => {
+  try {
+    const { recipientId, recipientType } = req.query;
+    let query = { isRead: false };
+    if (recipientId) {
+      query.$or = [
+        { recipientId },
+        { recipientType, recipientId: null },
+        { recipientType: "all", recipientId: null },
+      ];
+    } else if (recipientType) {
+      query.$or = [
+        { recipientType },
+        { recipientType: "all" },
+      ];
+    }
+    const count = await notificationModel.countDocuments(query);
+    return res.status(200).json({ count });
+  } catch (err) {
+    console.error("Error getting unread count:", err);
+    return res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { getUnreadCount,  getClassNotifications,  getNotifications, markAsRead, markAllAsRead, createAnnouncement };
+
 
