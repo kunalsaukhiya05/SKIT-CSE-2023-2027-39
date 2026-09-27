@@ -101,4 +101,32 @@ const deleteResource = async (req, res) => {
   }
 };
 
-module.exports = { uploadResource, getResources, deleteResource };
+
+// Bandwidth-Aware Resource Filtering & Lightweight Summary [Rishabh Jain]
+const getLightweightResources = async (req, res) => {
+  try {
+    const { subject, category } = req.query;
+    let query = {};
+    if (subject) query.subject = new RegExp(subject, "i");
+    if (category) query.category = category;
+
+    // Project only essential fields to preserve cellular bandwidth
+    const resources = await resourceModel
+      .find(query)
+      .select("title subject category fileSize fileName createdAt teacherName")
+      .sort({ createdAt: -1 })
+      .limit(30);
+
+    return res.status(200).json({
+      message: "Lightweight resource catalog retrieved",
+      count: resources.length,
+      resources,
+    });
+  } catch (err) {
+    console.error("Error fetching lightweight resources:", err);
+    return res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { getLightweightResources,  uploadResource, getResources, deleteResource };
+
