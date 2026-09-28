@@ -108,4 +108,50 @@ const getStudentAttendance = async (req, res) => {
   }
 };
 
-module.exports = { markAttendance, getClassAttendance, getStudentAttendance };
+
+// Live Classroom Auto Attendance Recording [Manish Regar]
+const recordLiveAttendance = async (req, res) => {
+  try {
+    const studentId = req.studentId;
+    const { classId, durationSeconds, studentName } = req.body;
+
+    if (!classId) {
+      return res.status(400).json({ message: "Class ID is required" });
+    }
+
+    // Must attend for at least 10 minutes (600 seconds) to be marked present, else late
+    const attendanceStatus = (durationSeconds && durationSeconds >= 600) ? "present" : "late";
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const record = await attendanceModel.findOneAndUpdate(
+      {
+        classId,
+        studentId,
+        date: {
+          $gte: today,
+          $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+        },
+      },
+      {
+        classId,
+        studentId,
+        studentName: studentName || "Student",
+        status: attendanceStatus,
+        date: new Date(),
+      },
+      { upsert: true, new: true }
+    );
+
+    res.status(200).json({
+      message: "Live attendance recorded successfully",
+      record,
+    });
+  } catch (err) {
+    console.error("Error recording live attendance:", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance };
