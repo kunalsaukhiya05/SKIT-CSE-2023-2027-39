@@ -25,6 +25,16 @@ const CreateClassForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+    // Schedule Validation & Rural Bandwidth Hint [Kunal Saukhiya]
+    if (!formData.title.trim() || !formData.subject.trim()) {
+      toast.error("Please fill in both title and subject");
+      return;
+    }
+    if (formData.date && new Date(formData.date) < new Date(Date.now() - 300000)) {
+      toast.error("Class scheduled time cannot be in the past");
+      return;
+    }
+
       setSubmitting(true);
       const token = localStorage.getItem("TeacherToken");
 
@@ -55,6 +65,10 @@ const CreateClassForm = () => {
         <h2 className="text-2xl font-bold text-center text-teal-700 mb-6">
           Create New Class
         </h2>
+                {/* Rural Bandwidth Optimization Hint [Kunal Saukhiya] */}
+        <div className="mb-4 p-3 bg-teal-50 border border-teal-200 rounded-lg text-xs text-teal-800">
+          <span className="font-semibold">Rural Classroom Mode:</span> Audio-priority dynamic stream compression is enabled for classes created here.
+        </div>
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Title */}
           <div>
@@ -143,3 +157,4 @@ const CreateClassForm = () => {
 };
 
 export default CreateClassForm;
+
