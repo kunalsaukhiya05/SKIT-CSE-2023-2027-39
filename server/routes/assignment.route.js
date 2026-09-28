@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {
   createAssignment,
+  getPendingAssignmentsByClass,
   getAssignments,
   getAssignmentById,
   submitAssignment,
@@ -15,6 +16,7 @@ const authStudentToken = require("../middleware/authStudentToken");
 
 // Teacher routes
 router.post("/create", authTeacherToken, createAssignment);
+router.get("/pending/:classId?", getPendingAssignmentsByClass);
 router.get("/list", getAssignments);
 router.get("/:id", getAssignmentById);
 router.get("/submissions/:assignmentId", authTeacherToken, getSubmissions);
@@ -26,3 +28,4 @@ router.post("/submit", authStudentToken, submitAssignment);
 router.get("/student/submissions", authStudentToken, getStudentSubmissions);
 
 module.exports = router;
+
