@@ -201,4 +201,32 @@ const getClassroomStats = async (req, res) => {
   }
 };
 
-module.exports = { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess, getClassroomStats };
+
+// End Live Classroom Session [Manish Regar]
+const endClassroomSession = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const teacherId = req.teacherId;
+
+    const cls = await classModel.findById(classId);
+    if (!cls) {
+      return res.status(404).json({ message: "Classroom not found" });
+    }
+
+    if (cls.teacherId && cls.teacherId.toString() !== teacherId.toString()) {
+      return res.status(403).json({ message: "Unauthorized: Only class teacher can end session" });
+    }
+
+    cls.status = "completed";
+    cls.isLive = false;
+    cls.updatedAt = new Date();
+    await cls.save();
+
+    res.status(200).json({ message: "Classroom session ended successfully", class: cls });
+  } catch (err) {
+    console.error("Error ending classroom session:", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess, getClassroomStats, endClassroomSession };

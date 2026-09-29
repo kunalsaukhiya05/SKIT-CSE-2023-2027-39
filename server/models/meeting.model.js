@@ -124,6 +124,40 @@ meetingSchema.statics.findActiveByMeetingCode = function (meetingCode) {
   );
 };
 
+
+// Live Meeting Lifecycle & Status Management [Manish Regar]
+meetingSchema.methods.endMeeting = function (endTime = new Date()) {
+  this.status = "ended";
+  this.endTime = endTime;
+
+  // Finalize all open participants who haven't logged leftAt
+  this.participants.forEach((p) => {
+    if (!p.leftAt) {
+      p.leftAt = endTime;
+      p.durationSeconds = Math.max(0, Math.round((new Date(endTime) - new Date(p.joinedAt)) / 1000));
+    }
+  });
+
+  return this.save();
+};
+
+meetingSchema.statics.getMeetingSummary = async function (meetingCode) {
+  const meeting = await this.findOne({ meetingCode }).populate("hostTeacherId", "fullName email");
+  if (!meeting) return null;
+
+  const totalDuration = meeting.endTime && meeting.startTime
+    ? Math.round((new Date(meeting.endTime) - new Date(meeting.startTime)) / 1000)
+    : 0;
+
+  return {
+    meetingCode: meeting.meetingCode,
+    title: meeting.title,
+    status: meeting.status,
+    totalAttendees: meeting.participants.length,
+    totalDurationSeconds: totalDuration,
+  };
+};
+
 const meetingModel = mongoose.model("Meeting", meetingSchema);
 
 module.exports = meetingModel;
