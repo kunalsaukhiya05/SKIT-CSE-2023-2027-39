@@ -1,9 +1,23 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { toast } from 'react-hot-toast'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { Link } from 'react-router-dom'
 
 const Contact = () => {
+  // Contact State & Toast Dispatch [Kunal Saukhiya]
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setTimeout(() => {
+      toast.success("Thank you! Your inquiry has been sent to our rural helpdesk.");
+      setFormData({ name: '', email: '', message: '' });
+      setLoading(false);
+    }, 600);
+  };
   return (
      <div className="min-h-screen bg-gray-50 font-sans">
      <Header />
@@ -26,12 +40,12 @@ const Contact = () => {
           <h3 className="text-2xl font-semibold text-teal-600 mb-6">
             📩 Send us a Message
           </h3>
-          <form className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-gray-700 mb-2 font-medium">Full Name</label>
               <input
                 type="text"
-                placeholder="Enter your name"
+                placeholder="Enter your name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
                 required
               />
@@ -40,7 +54,7 @@ const Contact = () => {
               <label className="block text-gray-700 mb-2 font-medium">Email</label>
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Enter your email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
                 required
               />
@@ -48,7 +62,7 @@ const Contact = () => {
             <div>
               <label className="block text-gray-700 mb-2 font-medium">Message</label>
               <textarea
-                placeholder="Write your message..."
+                placeholder="Write your message..." value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})}
                 rows="4"
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
                 required
@@ -96,3 +110,4 @@ const Contact = () => {
 }
 
 export default Contact
+
