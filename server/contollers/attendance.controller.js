@@ -154,4 +154,35 @@ const recordLiveAttendance = async (req, res) => {
   }
 };
 
-module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance };
+
+// Class Attendance Summary & Statistics [Manish Regar]
+const getClassAttendanceSummary = async (req, res) => {
+  try {
+    const { classId } = req.params;
+
+    const records = await attendanceModel.find({ classId });
+    const totalRecords = records.length;
+    const presentCount = records.filter((r) => r.status === "present").length;
+    const lateCount = records.filter((r) => r.status === "late").length;
+    const absentCount = records.filter((r) => r.status === "absent").length;
+    const overallRate = totalRecords > 0
+      ? Number(((presentCount + lateCount) / totalRecords * 100).toFixed(1))
+      : 0;
+
+    res.status(200).json({
+      message: "Class attendance summary generated",
+      summary: {
+        totalRecords,
+        presentCount,
+        lateCount,
+        absentCount,
+        overallRate,
+      },
+    });
+  } catch (err) {
+    console.error("Error generating attendance summary:", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary };
