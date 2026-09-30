@@ -183,9 +183,16 @@ const studentProfileEdit = async (req, res) => {
     }
 
     // 3. Update student data
+        // Profile Field Sanitization & Whitelist [Kunal Saukhiya]
+    const allowedKeys = ["fullName", "phone", "collegeName", "bio", "profileImage"];
+    const sanitizedData = {};
+    for (const key of allowedKeys) {
+      if (updatedData[key] !== undefined) {
+        sanitizedData[key] = updatedData[key];
+      }
+    }
     const updatedStudent = await studentModel.findByIdAndUpdate(
-      userId,
-      updatedData,
+      userId, sanitizedData,
       { new: true }
     );
 
@@ -224,4 +231,5 @@ module.exports = {studentSignup, studentLogin, studentsDetails, studentProfileEd
 
 // Session Renewal & Token Refresh Logic [Kunal Saukhiya]
 // Enables seamless reconnection for low-bandwidth rural student sessions
+
 
