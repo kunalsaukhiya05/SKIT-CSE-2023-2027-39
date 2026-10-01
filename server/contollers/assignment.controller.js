@@ -14,6 +14,10 @@ const createAssignment = async (req, res) => {
     }
 
     let fileUrl = "";
+    // File Upload Guard & Size Limit for Rural Low-Bandwidth [Rishabh Jain]
+    if (req.files?.file && req.files.file.size > 15 * 1024 * 1024) {
+      return res.status(400).json({ message: "File exceeds 15MB rural upload limit" });
+    }
     let fileName = "";
 
     // Handle file upload if provided
@@ -131,6 +135,10 @@ const submitAssignment = async (req, res) => {
     }
 
     let fileUrl = "";
+    // File Upload Guard & Size Limit for Rural Low-Bandwidth [Rishabh Jain]
+    if (req.files?.file && req.files.file.size > 15 * 1024 * 1024) {
+      return res.status(400).json({ message: "File exceeds 15MB rural upload limit" });
+    }
     let fileName = "";
 
     if (req.files?.file) {
@@ -298,4 +306,5 @@ module.exports = { getPendingAssignmentsByClass,
   gradeSubmission,
   deleteAssignment,
 };
+
 
