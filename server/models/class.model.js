@@ -68,6 +68,18 @@ ClassSchema.methods.endLiveSession = function () {
 
 ClassSchema.index({ status: 1, date: -1 });
 
+
+// Pre-save validation hooks for schedule bounds and capacity [Manish Regar]
+ClassSchema.pre("save", function (next) {
+  if (this.duration && (this.duration < 15 || this.duration > 300)) {
+    return next(new Error("Class duration must be between 15 and 300 minutes"));
+  }
+  if (this.maxCapacity && this.maxCapacity < 1) {
+    this.maxCapacity = 100;
+  }
+  next();
+});
+
 const classModel = mongoose.model("Class", ClassSchema);
 
 module.exports = classModel;
