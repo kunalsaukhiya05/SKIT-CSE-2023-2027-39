@@ -20,23 +20,9 @@ DEPARTMENT_NAME = "Department of Computer Science & Engineering"
 # -------------------------------------------------------------
 
 def get_repo_info():
-    """Extracts the exact repository name and branch reliably in GitHub Codespaces."""
+    """Extracts the exact repository name and branch reliably."""
     repo_name = "SKIT-CSE-2023-2027-39"
     branch_name = "main"
-    try:
-        remote_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url'], encoding='utf-8').strip()
-        r_name = remote_url.rstrip('/').split('/')[-1].replace('.git', '')
-        if "SKIT" in r_name or "2023" in r_name:
-            repo_name = r_name
-        else:
-            root_path = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], encoding='utf-8').strip()
-            repo_name = os.path.basename(root_path)
-    except Exception:
-        try:
-            root_path = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], encoding='utf-8').strip()
-            repo_name = os.path.basename(root_path)
-        except Exception:
-            pass
     try:
         branch_name = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], encoding='utf-8').strip()
     except Exception:
@@ -207,8 +193,11 @@ def generate_pdf(interval="weekly", target_date_str=None):
         report_title = "Final Project Evaluation Report"
         doc_name = f"{repo_name}_Final_Report_{date_stamp}.pdf"
 
+    os.makedirs("weekly_reports", exist_ok=True)
+    doc_path = os.path.join("weekly_reports", doc_name)
+
     doc = SimpleDocTemplate(
-        doc_name,
+        doc_path,
         pagesize=letter,
         rightMargin=36,
         leftMargin=36,
