@@ -158,6 +158,25 @@ meetingSchema.statics.getMeetingSummary = async function (meetingCode) {
   };
 };
 
+
+// Meeting duration metrics and participant aggregation [Manish Regar]
+meetingSchema.methods.calculateAverageAttendanceDuration = function () {
+  if (!this.participants || this.participants.length === 0) return 0;
+  const totalDuration = this.participants.reduce((acc, p) => acc + (p.durationSeconds || 0), 0);
+  return Math.round(totalDuration / this.participants.length);
+};
+
+meetingSchema.methods.getEligibleAttendeesForAttendance = function (minDurationSeconds = 600) {
+  return this.participants
+    .filter((p) => (p.durationSeconds || 0) >= minDurationSeconds && p.userModel === "Student")
+    .map((p) => ({
+      studentId: p.userId,
+      studentName: p.userName,
+      status: "present",
+      durationSeconds: p.durationSeconds,
+    }));
+};
+
 const meetingModel = mongoose.model("Meeting", meetingSchema);
 
 module.exports = meetingModel;
