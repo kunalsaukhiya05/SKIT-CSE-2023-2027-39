@@ -128,5 +128,31 @@ const getLightweightResources = async (req, res) => {
   }
 };
 
-module.exports = { getLightweightResources,  uploadResource, getResources, deleteResource };
+// Stream resource with low-bandwidth chunking [Rishabh Jain]
+const streamResource = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const networkQuality = req.headers["x-network-quality"] || req.query.network || "3g";
+    const resource = await resourceModel.findById(id);
+
+    if (!resource) {
+      return res.status(404).json({ message: "Resource not found" });
+    }
+
+    return res.status(200).json({
+      message: "Streaming meta initialized for low bandwidth environment",
+      resourceId: resource._id,
+      title: resource.title,
+      fileUrl: resource.fileUrl,
+      networkQuality,
+      recommendedChunkSizeKb: networkQuality === "2g" ? 32 : networkQuality === "3g" ? 64 : 256,
+    });
+  } catch (err) {
+    console.error("Error streaming resource:", err);
+    return res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { getLightweightResources, streamResource, uploadResource, getResources, deleteResource };
+
 
