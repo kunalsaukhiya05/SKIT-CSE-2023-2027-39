@@ -1,4 +1,4 @@
-const classModel = require("../models/class.model");
+﻿const classModel = require("../models/class.model");
 
 const createClassroom = async (req, res) => {
   const { title, subject, date, description, teacherName } = req.body;
@@ -296,4 +296,29 @@ const meetingHeartbeat = async (req, res) => {
   }
 };
 
-module.exports = { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess, getClassroomStats, endClassroomSession, joinClassByCode, meetingHeartbeat };
+
+// Rural Bandwidth Optimization & Audio-Only Stream Mode Toggle [Kunal Saukhiya]
+const toggleLowBandwidthMode = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { lowBandwidthMode } = req.body;
+    const updatedClass = await classModel.findByIdAndUpdate(
+      id,
+      { lowBandwidthMode: Boolean(lowBandwidthMode) },
+      { new: true }
+    );
+    if (!updatedClass) {
+      return res.status(404).json({ message: "Classroom not found" });
+    }
+    return res.status(200).json({
+      message: "Low bandwidth mode ${lowBandwidthMode ? "enabled" : "disabled"}",
+      class: updatedClass,
+    });
+  } catch (err) {
+    console.error("Error updating bandwidth mode:", err);
+    return res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { toggleLowBandwidthMode,  createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess, getClassroomStats, endClassroomSession, joinClassByCode, meetingHeartbeat };
+

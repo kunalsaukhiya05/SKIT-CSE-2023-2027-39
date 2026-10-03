@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+﻿const mongoose = require("mongoose");
 
 const ClassSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
@@ -8,6 +8,8 @@ const ClassSchema = new mongoose.Schema({
   duration: { type: Number, default: 60 }, // minutes
   roomId: { type: String },
   maxCapacity: { type: Number, default: 100 },
+  lowBandwidthMode: { type: Boolean, default: true },
+  allowAudioOnly: { type: Boolean, default: true },
   isLive: { type: Boolean, default: false },
   teacherId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -83,3 +85,4 @@ ClassSchema.pre("save", function (next) {
 const classModel = mongoose.model("Class", ClassSchema);
 
 module.exports = classModel;
+
