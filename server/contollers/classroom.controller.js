@@ -229,4 +229,46 @@ const endClassroomSession = async (req, res) => {
   }
 };
 
-module.exports = { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess, getClassroomStats, endClassroomSession };
+
+// Join Class by Room Code / Meeting Code [Manish Regar]
+const joinClassByCode = async (req, res) => {
+  try {
+    const { code } = req.body;
+    const studentId = req.studentId;
+
+    if (!code) {
+      return res.status(400).json({ message: "Class code or Room ID is required" });
+    }
+
+    const trimmedCode = code.trim();
+    const query = trimmedCode.match(/^[0-9a-fA-F]{24}$/)
+      ? { $or: [{ roomId: trimmedCode }, { _id: trimmedCode }] }
+      : { roomId: trimmedCode };
+
+    const cls = await classModel.findOne(query);
+    if (!cls) {
+      return res.status(404).json({ message: "Classroom not found for the provided code" });
+    }
+
+    if (!cls.students.some((id) => id.toString() === studentId.toString())) {
+      if (cls.students.length >= (cls.maxCapacity || 100)) {
+        return res.status(403).json({ message: "Classroom capacity reached" });
+      }
+      cls.students.push(studentId);
+      await cls.save();
+    }
+
+    res.status(200).json({
+      message: "Successfully admitted to classroom",
+      classId: cls._id,
+      roomId: cls.roomId,
+      title: cls.title,
+      isLive: cls.isLive,
+    });
+  } catch (err) {
+    console.error("Error joining class by code:", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess, getClassroomStats, endClassroomSession, joinClassByCode };
