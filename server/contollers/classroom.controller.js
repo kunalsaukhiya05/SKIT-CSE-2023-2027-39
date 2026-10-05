@@ -271,4 +271,28 @@ const joinClassByCode = async (req, res) => {
   }
 };
 
-module.exports = { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess, getClassroomStats, endClassroomSession, joinClassByCode };
+
+// Active Meeting Session Heartbeat Ping [Manish Regar]
+const meetingHeartbeat = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const userId = req.studentId || req.teacherId;
+
+    const cls = await classModel.findOne({ roomId });
+    if (!cls) {
+      return res.status(404).json({ message: "Classroom session not found" });
+    }
+
+    res.status(200).json({
+      status: "alive",
+      isLive: cls.isLive,
+      classStatus: cls.status,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("Error in meeting heartbeat:", err);
+    res.status(500).json({ message: "Heartbeat failed", error: err.message });
+  }
+};
+
+module.exports = { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess, getClassroomStats, endClassroomSession, joinClassByCode, meetingHeartbeat };

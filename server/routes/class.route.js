@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess, getClassroomStats, endClassroomSession, joinClassByCode } = require("../contollers/classroom.controller");
+const { createClassroom, AllClassess, getClassById, joinClass, getTeacherClasses, leaveClass, verifyRoomAccess, getClassroomStats, endClassroomSession, joinClassByCode, meetingHeartbeat } = require("../contollers/classroom.controller");
 const authTeacherToken = require("../middleware/authTeacherToken");
 const authStudentToken = require("../middleware/authStudentToken");
 
@@ -14,6 +14,7 @@ router.post("/leave/:classId", authStudentToken, leaveClass);
 router.post("/join-by-code", authStudentToken, joinClassByCode);
 router.post("/end-session/:classId", authTeacherToken, endClassroomSession);
 router.get("/verify-room/:roomId", authStudentToken, verifyRoomAccess);
+router.post("/meeting/:roomId/heartbeat", authStudentToken, meetingHeartbeat);
 
 module.exports = router;
 // Classroom API Route Security & Role Access Validation [Kunal Saukhiya]
