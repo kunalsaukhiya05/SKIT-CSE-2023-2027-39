@@ -185,4 +185,50 @@ const getClassAttendanceSummary = async (req, res) => {
   }
 };
 
-module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary };
+
+// Meeting Departure Auto-Sync Attendance [Manish Regar]
+const syncMeetingAttendance = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const { studentId, studentName, durationSeconds } = req.body;
+
+    if (!classId || !studentId) {
+      return res.status(400).json({ message: "Class ID and Student ID are required" });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const duration = Number(durationSeconds) || 0;
+    const status = duration >= 600 ? "present" : duration >= 180 ? "late" : "absent";
+
+    const record = await attendanceModel.findOneAndUpdate(
+      {
+        classId,
+        studentId,
+        date: {
+          $gte: today,
+          $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+        },
+      },
+      {
+        classId,
+        studentId,
+        studentName: studentName || "Student",
+        status,
+        date: new Date(),
+      },
+      { upsert: true, new: true }
+    );
+
+    res.status(200).json({
+      message: "Meeting departure attendance synced successfully",
+      record,
+    });
+  } catch (err) {
+    console.error("Error syncing meeting attendance:", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance };
