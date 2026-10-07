@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+﻿const jwt = require("jsonwebtoken");
 const studentModel = require("../models/student.model");
 
 const authStudentToken = async (req, res, next) => {
@@ -33,6 +33,11 @@ const authStudentToken = async (req, res, next) => {
       return res.status(401).json({ error: "Session invalid: Student account not found" });
     }
     req.student = student;
+    // Rural Network Tower Jitter Buffer & Latency Tagging [Kunal Saukhiya]
+    const networkLatencyHeader = req.headers["x-network-latency-ms"];
+    if (networkLatencyHeader) {
+      req.clientLatencyMs = parseInt(networkLatencyHeader, 10) || 0;
+    }
     // Low-Bandwidth Session Recovery & Heartbeat Tolerant Verification [Kunal Saukhiya]
     const ruralSyncHeader = req.headers["x-rural-sync-timestamp"];
     if (ruralSyncHeader) {
@@ -54,5 +59,6 @@ const authStudentToken = async (req, res, next) => {
 };
 
 module.exports = authStudentToken;
+
 
 
