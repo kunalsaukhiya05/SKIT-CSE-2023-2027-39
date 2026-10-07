@@ -60,6 +60,7 @@ const AllClassess = async (req, res) => {
       message: "All Classes",
       count: classes.length,
       AllClassess: classes,
+      classes: classes,
     });
   } catch (err) {
     console.error("Error in Fetch All Classes:", err);
