@@ -1,7 +1,8 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import DeadlineAlertBanner from './notifications/DeadlineAlertBanner'
 
-const StudentDashboardHeader = () => {
+const StudentDashboardHeader = ({ pendingAssignments }) => {
   return (
     <div>
        <header className="bg-teal-700 text-white px-6 py-4 flex justify-between items-center shadow">
@@ -12,8 +13,14 @@ const StudentDashboardHeader = () => {
           <Link to="#" className="hover:underline">Logout</Link>
         </nav>
       </header>
+      {pendingAssignments && pendingAssignments.length > 0 && (
+        <div className="px-6 pt-4">
+          <DeadlineAlertBanner pendingAssignments={pendingAssignments} />
+        </div>
+      )}
     </div>
   )
 }
 
 export default StudentDashboardHeader
+
