@@ -1,4 +1,4 @@
-﻿const classModel = require("../models/class.model");
+const classModel = require("../models/class.model");
 
 const createClassroom = async (req, res) => {
   const { title, subject, date, description, teacherName } = req.body;
@@ -311,7 +311,7 @@ const toggleLowBandwidthMode = async (req, res) => {
       return res.status(404).json({ message: "Classroom not found" });
     }
     return res.status(200).json({
-      message: "Low bandwidth mode ${lowBandwidthMode ? "enabled" : "disabled"}",
+      message: lowBandwidthMode ? "Low bandwidth mode enabled" : "Low bandwidth mode disabled",
       class: updatedClass,
     });
   } catch (err) {
