@@ -5,6 +5,11 @@ on:
     # Runs at 18:29 UTC every Thursday (11:59 PM IST) to capture weekly progress
     - cron: '29 18 * * 4'
   workflow_dispatch:
+    inputs:
+      target_date:
+        description: 'Target report date (YYYY-MM-DD) - leave empty for auto/today'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -31,12 +36,18 @@ jobs:
 
       - name: Generate Form-3 Weekly Progress Report
         run: |
-          python generate_report.py weekly
+          if [ -n "${{ inputs.target_date }}" ]; then
+            python generate_report.py weekly "${{ inputs.target_date }}"
+          else
+            python generate_report.py weekly
+          fi
 
-      - name: Move report to weekly_reports folder
+      - name: Ensure reports are in weekly_reports folder
         run: |
           mkdir -p weekly_reports
-          mv -f *.pdf weekly_reports/
+          if ls *.pdf 1> /dev/null 2>&1; then
+            mv -f *.pdf weekly_reports/
+          fi
 
       - name: Commit and push archived report
         run: |
