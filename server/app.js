@@ -25,7 +25,7 @@ DBConnection();
 // Middleware
 app.use(cookieParser());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  origin: true,
   credentials: true,
 }));
 app.use(express.urlencoded({ extended: true }));
