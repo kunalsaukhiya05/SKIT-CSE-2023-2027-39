@@ -16,7 +16,8 @@ const authStudentToken = require("../middleware/authStudentToken");
 
 // Teacher routes
 router.post("/create", authTeacherToken, createAssignment);
-router.get("/pending/:classId?", getPendingAssignmentsByClass);
+router.get("/pending", getPendingAssignmentsByClass);
+router.get("/pending/:classId", getPendingAssignmentsByClass);
 router.get("/list", getAssignments);
 router.get("/:id", getAssignmentById);
 router.get("/submissions/:assignmentId", authTeacherToken, getSubmissions);
