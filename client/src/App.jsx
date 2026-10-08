@@ -22,9 +22,8 @@ import Context from "./context/context";
 
 // Lazy-loaded pages (Priority 8: code splitting for performance)
 
-// Placeholders for future sprints
-const Classroom = () => <div className="p-10 text-center text-xl font-semibold">Classroom Module (Coming Soon)</div>;
-const CreateClassForm = () => <div className="p-10 text-center text-xl font-semibold">Create Class Module (Coming Soon)</div>;
+import Classroom from "./pages/Classroom";
+import CreateClassForm from "./pages/dashboard/CreateClassForm";
 const TeacherAssignments = () => <div className="p-10 text-center text-xl font-semibold">Assignments Module (Coming Soon)</div>;
 const StudentAssignment = () => <div className="p-10 text-center text-xl font-semibold">Student Assignments (Coming Soon)</div>;
 const TeacherResources = () => <div className="p-10 text-center text-xl font-semibold">Resources Module (Coming Soon)</div>;
