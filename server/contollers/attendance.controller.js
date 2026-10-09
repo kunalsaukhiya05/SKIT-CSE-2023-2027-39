@@ -231,4 +231,53 @@ const syncMeetingAttendance = async (req, res) => {
   }
 };
 
-module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance };
+
+// Direct Live Attendance Recording endpoint [Manish Regar]
+const recordAttendance = async (req, res) => {
+  try {
+    const studentId = req.studentId;
+    const { classId, durationSeconds, studentName } = req.body;
+
+    if (!classId) {
+      return res.status(400).json({ success: false, message: "Class ID is required" });
+    }
+
+    const duration = Math.max(0, parseInt(durationSeconds) || 0);
+    const status = duration >= 600 ? "present" : duration >= 180 ? "late" : "absent";
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const record = await attendanceModel.findOneAndUpdate(
+      {
+        classId,
+        studentId,
+        date: {
+          $gte: today,
+          $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+        },
+      },
+      {
+        classId,
+        studentId,
+        studentName: studentName || "Student",
+        status,
+        date: new Date(),
+      },
+      { upsert: true, new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `Attendance recorded as ${status} (${Math.round(duration / 60)} mins attended)`,
+      attendance: record,
+      status,
+      durationSeconds: duration,
+    });
+  } catch (err) {
+    console.error("Error in recordAttendance:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance, recordAttendance };
