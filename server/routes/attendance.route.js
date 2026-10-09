@@ -1,6 +1,6 @@
-const express = require("express");
+﻿const express = require("express");
 const router = express.Router();
-const { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance, recordAttendance, getClassAttendanceReport, getStudentAttendanceAnalytics, exportClassAttendance } = require("../contollers/attendance.controller");
+const { syncBatchOfflineAttendance, markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance, recordAttendance, getClassAttendanceReport, getStudentAttendanceAnalytics, exportClassAttendance } = require("../contollers/attendance.controller");
 const authTeacherToken = require("../middleware/authTeacherToken");
 const authStudentToken = require("../middleware/authStudentToken");
 
@@ -14,6 +14,8 @@ router.get("/my-analytics", authStudentToken, getStudentAttendanceAnalytics);
 router.get("/analytics/:studentId", getStudentAttendanceAnalytics);
 router.post("/record", authStudentToken, recordAttendance);
 router.post("/record-live", authStudentToken, recordLiveAttendance);
+router.post("/batch-offline-sync", authStudentToken, syncBatchOfflineAttendance);
 router.post("/meeting-sync/:classId", authStudentToken, syncMeetingAttendance);
 
 module.exports = router;
+

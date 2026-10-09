@@ -1,4 +1,4 @@
-const attendanceModel = require("../models/attendance.model");
+﻿const attendanceModel = require("../models/attendance.model");
 
 // Mark attendance (Teacher)
 const markAttendance = async (req, res) => {
@@ -480,4 +480,60 @@ const exportClassAttendance = async (req, res) => {
   }
 };
 
-module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance, recordAttendance, getClassAttendanceReport, getStudentAttendanceAnalytics, exportClassAttendance };
+
+// Offline Attendance Queue Reconciliation & Batch Sync [Kunal Saukhiya]
+const syncBatchOfflineAttendance = async (req, res) => {
+  try {
+    const studentId = req.studentId;
+    const { batch } = req.body;
+
+    if (!Array.isArray(batch) || batch.length === 0) {
+      return res.status(400).json({ success: false, message: "Batch array of attendance items required" });
+    }
+
+    const results = [];
+    for (const item of batch) {
+      const { classId, timestamp, durationSeconds, studentName } = item;
+      if (!classId) continue;
+
+      const recordDate = timestamp ? new Date(timestamp) : new Date();
+      const startOfDay = new Date(recordDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(recordDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const duration = Math.max(0, parseInt(durationSeconds) || 0);
+      const status = duration >= 600 ? "present" : duration >= 180 ? "late" : "present";
+
+      const record = await attendanceModel.findOneAndUpdate(
+        {
+          classId,
+          studentId,
+          date: { $gte: startOfDay, $lte: endOfDay },
+        },
+        {
+          classId,
+          studentId,
+          studentName: studentName || "Student",
+          status,
+          date: recordDate,
+        },
+        { upsert: true, new: true }
+      );
+      results.push(record);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: Successfully synchronized ${results.length} offline attendance records,
+      syncedCount: results.length,
+      records: results,
+    });
+  } catch (err) {
+    console.error("Error in syncBatchOfflineAttendance:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { syncBatchOfflineAttendance,  markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance, recordAttendance, getClassAttendanceReport, getStudentAttendanceAnalytics, exportClassAttendance };
+
