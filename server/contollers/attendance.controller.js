@@ -280,4 +280,84 @@ const recordAttendance = async (req, res) => {
   }
 };
 
-module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance, recordAttendance };
+
+// Comprehensive Class Attendance Report with Defaulter Detection [Manish Regar]
+const getClassAttendanceReport = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const { threshold = 75, startDate, endDate } = req.query;
+
+    if (!classId) {
+      return res.status(400).json({ success: false, message: "Class ID is required" });
+    }
+
+    const filter = { classId };
+    if (startDate || endDate) {
+      filter.date = {};
+      if (startDate) filter.date.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.date.$lte = end;
+      }
+    }
+
+    const records = await attendanceModel
+      .find(filter)
+      .populate("studentId", "fullName email")
+      .sort({ date: -1 });
+
+    const studentMap = {};
+    for (const r of records) {
+      const sId = r.studentId?._id?.toString() || r.studentId?.toString() || r.studentName;
+      if (!studentMap[sId]) {
+        studentMap[sId] = {
+          studentId: sId,
+          studentName: r.studentName || r.studentId?.fullName || "Student",
+          totalSessions: 0,
+          attendedSessions: 0,
+          lateSessions: 0,
+          absentSessions: 0,
+        };
+      }
+      studentMap[sId].totalSessions += 1;
+      if (r.status === "present") studentMap[sId].attendedSessions += 1;
+      else if (r.status === "late") studentMap[sId].lateSessions += 1;
+      else studentMap[sId].absentSessions += 1;
+    }
+
+    const requiredThreshold = Number(threshold) || 75;
+    const studentSummaries = Object.values(studentMap).map((s) => {
+      const rate = s.totalSessions > 0
+        ? Number(((s.attendedSessions + s.lateSessions) / s.totalSessions * 100).toFixed(1))
+        : 0;
+      return {
+        ...s,
+        attendanceRate: rate,
+        isDefaulter: rate < requiredThreshold,
+      };
+    });
+
+    const defaulters = studentSummaries.filter((s) => s.isDefaulter);
+    const overallClassAverage = studentSummaries.length > 0
+      ? Number((studentSummaries.reduce((acc, s) => acc + s.attendanceRate, 0) / studentSummaries.length).toFixed(1))
+      : 0;
+
+    return res.status(200).json({
+      success: true,
+      classId,
+      totalStudents: studentSummaries.length,
+      totalClassRecords: records.length,
+      overallClassAverage,
+      defaulterCount: defaulters.length,
+      defaulterThreshold: requiredThreshold,
+      defaulters,
+      students: studentSummaries,
+    });
+  } catch (err) {
+    console.error("Error generating class attendance report:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance, recordAttendance, getClassAttendanceReport };
