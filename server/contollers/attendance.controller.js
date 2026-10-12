@@ -360,4 +360,77 @@ const getClassAttendanceReport = async (req, res) => {
   }
 };
 
-module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance, recordAttendance, getClassAttendanceReport };
+
+// Student Longitudinal Attendance Analytics & Monthly Breakdown [Manish Regar]
+const getStudentAttendanceAnalytics = async (req, res) => {
+  try {
+    const studentId = req.studentId || req.params.studentId;
+    if (!studentId) {
+      return res.status(400).json({ success: false, message: "Student ID required" });
+    }
+
+    const records = await attendanceModel
+      .find({ studentId })
+      .populate("classId", "title subject")
+      .sort({ date: 1 });
+
+    const total = records.length;
+    let present = 0;
+    let late = 0;
+    let absent = 0;
+    const monthlyMap = {};
+    const subjectMap = {};
+
+    for (const r of records) {
+      if (r.status === "present") present += 1;
+      else if (r.status === "late") late += 1;
+      else absent += 1;
+
+      const d = new Date(r.date);
+      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (!monthlyMap[monthKey]) {
+        monthlyMap[monthKey] = { month: monthKey, total: 0, attended: 0 };
+      }
+      monthlyMap[monthKey].total += 1;
+      if (r.status === "present" || r.status === "late") monthlyMap[monthKey].attended += 1;
+
+      const sub = r.classId?.subject || "General";
+      if (!subjectMap[sub]) {
+        subjectMap[sub] = { subject: sub, total: 0, attended: 0 };
+      }
+      subjectMap[sub].total += 1;
+      if (r.status === "present" || r.status === "late") subjectMap[sub].attended += 1;
+    }
+
+    const overallRate = total > 0 ? Number(((present + late) / total * 100).toFixed(1)) : 0;
+    const monthlyTrends = Object.values(monthlyMap).map((m) => ({
+      ...m,
+      rate: Number(((m.attended / m.total) * 100).toFixed(1)),
+    }));
+    const subjectBreakdown = Object.values(subjectMap).map((s) => ({
+      ...s,
+      rate: Number(((s.attended / s.total) * 100).toFixed(1)),
+      needsAttention: Number(((s.attended / s.total) * 100).toFixed(1)) < 75,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      studentId,
+      summary: {
+        totalClasses: total,
+        present,
+        late,
+        absent,
+        overallRate,
+        isAtRisk: overallRate < 75,
+      },
+      monthlyTrends,
+      subjectBreakdown,
+    });
+  } catch (err) {
+    console.error("Error fetching student attendance analytics:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance, recordAttendance, getClassAttendanceReport, getStudentAttendanceAnalytics };
