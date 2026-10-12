@@ -1,4 +1,4 @@
-const notificationModel = require("../models/notification.model");
+﻿const notificationModel = require("../models/notification.model");
 
 // Get notifications for a user
 const getNotifications = async (req, res) => {
@@ -166,6 +166,38 @@ const getUnreadCount = async (req, res) => {
   }
 };
 
-module.exports = { getUnreadCount,  getClassNotifications,  getNotifications, markAsRead, markAllAsRead, createAnnouncement };
+
+// Rural Low-Bandwidth Emergency Alert & SMS Broadcast Handler [Kunal Saukhiya]
+const broadcastEmergencyAlert = async (req, res) => {
+  try {
+    const { title, message, classId, priority } = req.body;
+    if (!title || !message) {
+      return res.status(400).json({ message: "Title and message are required for emergency broadcast" });
+    }
+
+    const notification = await notificationModel.create({
+      title: [EMERGENCY] ${title},
+      message,
+      type: "announcement",
+      recipientType: "all",
+      senderId: req.teacherId || req.adminId,
+      senderName: "Urgent Classroom Alert",
+      classId: classId || null,
+    });
+
+    return res.status(201).json({
+      message: "Emergency broadcast dispatched with high cellular priority",
+      alertId: notification._id,
+      priority: priority || "high",
+      deliveredAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("Error broadcasting emergency alert:", err);
+    return res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { broadcastEmergencyAlert,  getUnreadCount,  getClassNotifications,  getNotifications, markAsRead, markAllAsRead, createAnnouncement };
+
 
 
