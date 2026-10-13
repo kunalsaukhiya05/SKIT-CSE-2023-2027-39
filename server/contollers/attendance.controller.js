@@ -433,4 +433,51 @@ const getStudentAttendanceAnalytics = async (req, res) => {
   }
 };
 
-module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance, recordAttendance, getClassAttendanceReport, getStudentAttendanceAnalytics };
+
+// Batch Attendance Summary Export Formatter for Audits & Reports [Manish Regar]
+const exportClassAttendance = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const { format = "json" } = req.query;
+
+    const records = await attendanceModel
+      .find({ classId })
+      .populate("classId", "title subject")
+      .populate("studentId", "fullName email")
+      .sort({ date: -1 });
+
+    if (format === "csv") {
+      const header = "Date,Class Title,Subject,Student Name,Status\n";
+      const rows = records.map((r) => {
+        const dateStr = new Date(r.date).toISOString().slice(0, 10);
+        const title = (r.classId?.title || "").replace(/,/g, " ");
+        const subject = (r.classId?.subject || "").replace(/,/g, " ");
+        const name = (r.studentName || r.studentId?.fullName || "Student").replace(/,/g, " ");
+        return `${dateStr},${title},${subject},${name},${r.status}`;
+      }).join("\n");
+
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename=attendance-${classId}.csv`);
+      return res.status(200).send(header + rows);
+    }
+
+    return res.status(200).json({
+      success: true,
+      classId,
+      recordCount: records.length,
+      exportedAt: new Date().toISOString(),
+      records: records.map((r) => ({
+        id: r._id,
+        date: r.date,
+        studentName: r.studentName,
+        status: r.status,
+        subject: r.classId?.subject,
+      })),
+    });
+  } catch (err) {
+    console.error("Error exporting class attendance:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { markAttendance, getClassAttendance, getStudentAttendance, recordLiveAttendance, getClassAttendanceSummary, syncMeetingAttendance, recordAttendance, getClassAttendanceReport, getStudentAttendanceAnalytics, exportClassAttendance };
