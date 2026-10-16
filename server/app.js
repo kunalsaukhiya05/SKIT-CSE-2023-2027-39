@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const app = express();
 const dotenv = require("dotenv").config();
 const cookieParser = require("cookie-parser");
@@ -18,6 +18,7 @@ const attendanceRouter = require("./routes/attendance.route");
 const notificationRouter = require("./routes/notification.route");
 const adminRouter = require("./routes/admin.route");
 const aiRouter = require("./routes/ai.route");
+const telemetryRouter = require("./routes/telemetry.route");
 
 // Database Connection
 DBConnection();
@@ -55,11 +56,12 @@ app.use("/api/attendance", attendanceRouter);
 app.use("/api/notification", notificationRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/ai", aiRouter);
+app.use("/api/telemetry", telemetryRouter);
 
 // Health check
 app.get("/", (req, res) => {
   res.json({
-    message: "Remote Classroom for Rural Colleges — API Server Running",
+    message: "Remote Classroom for Rural Colleges â€” API Server Running",
     status: "OK",
     timestamp: new Date().toISOString(),
   });
