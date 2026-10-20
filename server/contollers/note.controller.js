@@ -163,4 +163,84 @@ const getNoteById = async (req, res) => {
   }
 };
 
-module.exports = { uploadNote, getNotes, getDistinctSubjects, getNoteById };
+// Download Note with Counter Increment [Manish Regar]
+const downloadNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const note = await noteModel.findByIdAndUpdate(
+      id,
+      { $inc: { downloadCount: 1 } },
+      { new: true }
+    );
+
+    if (!note) {
+      return res.status(404).json({ success: false, message: "Note not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Download counter incremented",
+      fileUrl: note.fileUrl,
+      fileName: note.fileName,
+      downloadCount: note.downloadCount,
+    });
+  } catch (err) {
+    console.error("Error downloading note:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
+// Delete Note (Teacher) [Manish Regar]
+const deleteNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const teacherId = req.teacherId;
+
+    const note = await noteModel.findOne({ _id: id, teacherId });
+    if (!note) {
+      return res.status(404).json({ success: false, message: "Note not found or unauthorized" });
+    }
+
+    if (note.cloudinaryPublicId) {
+      try {
+        await cloudinary.uploader.destroy(note.cloudinaryPublicId);
+      } catch (cErr) {
+        console.warn("Cloudinary delete warning:", cErr.message);
+      }
+    }
+
+    await noteModel.findByIdAndDelete(id);
+
+    return res.status(200).json({ success: true, message: "Note deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting note:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
+// Notes Statistical Summary for Faculty & Dashboards [Manish Regar]
+const getNotesStats = async (req, res) => {
+  try {
+    const [totalNotes, totalDownloads, topSubjects] = await Promise.all([
+      noteModel.countDocuments(),
+      noteModel.aggregate([{ $group: { _id: null, total: { $sum: "$downloadCount" } } }]),
+      noteModel.aggregate([
+        { $group: { _id: "$subject", count: { $sum: 1 }, totalDownloads: { $sum: "$downloadCount" } } },
+        { $sort: { count: -1 } },
+        { $limit: 5 },
+      ]),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      totalNotes,
+      totalDownloads: totalDownloads[0]?.total || 0,
+      topSubjects,
+    });
+  } catch (err) {
+    console.error("Error fetching notes stats:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { uploadNote, getNotes, getDistinctSubjects, getNoteById, downloadNote, deleteNote, getNotesStats };
