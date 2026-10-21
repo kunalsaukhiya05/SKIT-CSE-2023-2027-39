@@ -20,6 +20,7 @@ const notificationRouter = require("./routes/notification.route");
 const adminRouter = require("./routes/admin.route");
 const aiRouter = require("./routes/ai.route");
 const telemetryRouter = require("./routes/telemetry.route");
+const syncAuditRouter = require("./routes/syncAudit.route");
 
 // Database Connection
 DBConnection();
@@ -59,6 +60,7 @@ app.use("/api/notification", notificationRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/ai", aiRouter);
 app.use("/api/telemetry", telemetryRouter);
+app.use("/api/sync-audit", syncAuditRouter);
 
 // Health check
 app.get("/", (req, res) => {
@@ -81,3 +83,4 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
