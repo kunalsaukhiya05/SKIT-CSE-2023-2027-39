@@ -21,6 +21,7 @@ const adminRouter = require("./routes/admin.route");
 const aiRouter = require("./routes/ai.route");
 const telemetryRouter = require("./routes/telemetry.route");
 const syncAuditRouter = require("./routes/syncAudit.route");
+const ruralAnalyticsRouter = require("./routes/ruralAnalytics.route");
 
 // Database Connection
 DBConnection();
@@ -61,6 +62,7 @@ app.use("/api/admin", adminRouter);
 app.use("/api/ai", aiRouter);
 app.use("/api/telemetry", telemetryRouter);
 app.use("/api/sync-audit", syncAuditRouter);
+app.use("/api/rural-analytics", ruralAnalyticsRouter);
 
 // Health check
 app.get("/", (req, res) => {
@@ -83,4 +85,5 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
 
