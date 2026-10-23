@@ -108,41 +108,43 @@ const getAssignmentById = async (req, res) => {
   }
 };
 
-// Submit assignment (Student only)
+// Enhanced Student Assignment Submission with Multi-Attempt & Late Detection [Manish Regar]
 const submitAssignment = async (req, res) => {
   try {
     const studentId = req.studentId;
-    const { assignmentId, submissionText, studentName } = req.body;
+    const { assignmentId, submissionText, studentName, allowResubmit } = req.body;
 
     if (!assignmentId) {
-      return res.status(400).json({ message: "Assignment ID is required" });
+      return res.status(400).json({ success: false, message: "Assignment ID is required" });
     }
 
-    // Check if assignment exists
     const assignment = await assignmentModel.findById(assignmentId);
     if (!assignment) {
-      return res.status(404).json({ message: "Assignment not found" });
+      return res.status(404).json({ success: false, message: "Assignment not found" });
     }
 
-    // Check if already submitted
     const existingSubmission = await submissionModel.findOne({
       assignmentId,
       studentId,
     });
 
-    if (existingSubmission) {
-      return res.status(409).json({ message: "You have already submitted this assignment" });
+    if (existingSubmission && !allowResubmit) {
+      return res.status(409).json({
+        success: false,
+        message: "Assignment already submitted. Enable resubmission flag to update.",
+        existingSubmission,
+      });
     }
 
-    let fileUrl = "";
-    // File Upload Guard & Size Limit for Rural Low-Bandwidth [Rishabh Jain]
-    if (req.files?.file && req.files.file.size > 15 * 1024 * 1024) {
-      return res.status(400).json({ message: "File exceeds 15MB rural upload limit" });
-    }
-    let fileName = "";
+    let fileUrl = existingSubmission?.fileUrl || "";
+    let fileName = existingSubmission?.fileName || "";
 
+    // Rural 15MB file upload limit guard
     if (req.files?.file) {
       const file = req.files.file;
+      if (file.size > 15 * 1024 * 1024) {
+        return res.status(400).json({ success: false, message: "File exceeds 15MB rural upload limit" });
+      }
       const uploadResponse = await cloudinary.uploader.upload(file.tempFilePath, {
         folder: "submissions",
         resource_type: "auto",
@@ -151,26 +153,37 @@ const submitAssignment = async (req, res) => {
       fileName = file.name;
     }
 
-    // Check if submission is late
     const isLate = new Date() > new Date(assignment.deadline);
+    const submissionStatus = existingSubmission
+      ? "resubmitted"
+      : isLate
+      ? "late"
+      : "submitted";
 
-    const submission = await submissionModel.create({
-      assignmentId,
-      studentId,
-      studentName: studentName || "Student",
-      submissionText: submissionText || "",
-      fileUrl,
-      fileName,
-      status: isLate ? "late" : "submitted",
-    });
+    const submission = await submissionModel.findOneAndUpdate(
+      { assignmentId, studentId },
+      {
+        assignmentId,
+        studentId,
+        studentName: studentName || "Student",
+        submissionText: submissionText || existingSubmission?.submissionText || "",
+        fileUrl,
+        fileName,
+        status: submissionStatus,
+        submittedAt: new Date(),
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
     return res.status(201).json({
-      message: isLate ? "Assignment submitted (late)" : "Assignment submitted successfully",
+      success: true,
+      message: isLate ? "Assignment submitted (Late Submission)" : "Assignment submitted successfully",
+      isLate,
       submission,
     });
   } catch (err) {
     console.error("Error submitting assignment:", err);
-    return res.status(500).json({ message: "Internal Server Error", error: err.message });
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
   }
 };
 
