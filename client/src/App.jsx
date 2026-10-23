@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense } from "react";
+﻿import React, { useEffect, useState, lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import Signup from "./pages/auth/Signup";
@@ -23,6 +23,7 @@ import Context from "./context/context";
 // Lazy-loaded pages (Priority 8: code splitting for performance)
 
 import Classroom from "./pages/Classroom";
+import AIChatbot from "./pages/AIChatBot/AIChatbot";
 import CreateClassForm from "./pages/dashboard/CreateClassForm";
 const TeacherAssignments = () => <div className="p-10 text-center text-xl font-semibold">Assignments Module (Coming Soon)</div>;
 const StudentAssignment = () => <div className="p-10 text-center text-xl font-semibold">Student Assignments (Coming Soon)</div>;
@@ -126,6 +127,7 @@ function App() {
           <Route path="/student-resources" element={<StudentResources />} />
           <Route path="/create-class" element={<CreateClassForm />} />
           <Route path="/classroom/:id" element={<Classroom />} />
+          <Route path="/ai-chatbot" element={<AIChatbot />} />
           {/* New routes */}
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
@@ -139,5 +141,6 @@ function App() {
 }
 
 export default App;
+
 
 
