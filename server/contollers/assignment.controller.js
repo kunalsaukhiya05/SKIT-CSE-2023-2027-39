@@ -226,44 +226,63 @@ const getStudentSubmissions = async (req, res) => {
   }
 };
 
-// Grade a submission (Teacher)
+// Rubric-Based Grading & Auto Letter Grade Handler [Manish Regar]
 const gradeSubmission = async (req, res) => {
   try {
     const { submissionId } = req.params;
-    const { grade, marks, feedback } = req.body;
+    const { marks, feedback, rubricScores } = req.body;
 
-    const submission = await submissionModel.findByIdAndUpdate(
-      submissionId,
-      {
-        grade,
-        marks,
-        feedback,
-        status: "graded",
-        gradedAt: new Date(),
-      },
-      { new: true }
-    );
-
+    const submission = await submissionModel.findById(submissionId).populate("assignmentId");
     if (!submission) {
-      return res.status(404).json({ message: "Submission not found" });
+      return res.status(404).json({ success: false, message: "Submission not found" });
     }
 
-    // Notify student about grade
-    await notificationModel.create({
-      title: "Assignment Graded",
-      message: `Your assignment has been graded. Grade: ${grade}${marks ? `, Marks: ${marks}` : ""}`,
-      type: "grade",
-      recipientType: "student",
-      recipientId: submission.studentId,
-    });
+    const totalMarks = submission.assignmentId?.totalMarks || 100;
+    const numMarks = parseFloat(marks);
+
+    // Auto calculate letter grade
+    let grade = "F";
+    if (!isNaN(numMarks)) {
+      const percentage = (numMarks / totalMarks) * 100;
+      if (percentage >= 90) grade = "A+";
+      else if (percentage >= 80) grade = "A";
+      else if (percentage >= 70) grade = "B";
+      else if (percentage >= 60) grade = "C";
+      else if (percentage >= 50) grade = "D";
+      else grade = "F";
+    }
+
+    submission.grade = grade;
+    submission.marks = isNaN(numMarks) ? submission.marks : numMarks;
+    submission.feedback = feedback || submission.feedback || "";
+    submission.status = "graded";
+    submission.gradedAt = new Date();
+    await submission.save();
+
+    // Create real-time notification for student
+    try {
+      await notificationModel.create({
+        title: "Assignment Graded",
+        message: `Your assignment '${submission.assignmentId?.title || "Assignment"}' was graded: ${grade} (${numMarks}/${totalMarks})`,
+        type: "grade",
+        recipientType: "student",
+        recipientId: submission.studentId,
+        senderId: req.teacherId,
+      });
+    } catch (notifErr) {
+      console.warn("Grading notification skipped:", notifErr.message);
+    }
 
     return res.status(200).json({
+      success: true,
       message: "Submission graded successfully",
+      grade,
+      marks: numMarks,
       submission,
     });
   } catch (err) {
     console.error("Error grading submission:", err);
-    return res.status(500).json({ message: "Internal Server Error", error: err.message });
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
   }
 };
 
