@@ -10,6 +10,7 @@ const {
   getStudentSubmissions,
   gradeSubmission,
   deleteAssignment,
+  getClassAssignmentStats,
 } = require("../contollers/assignment.controller");
 const authTeacherToken = require("../middleware/authTeacherToken");
 const authStudentToken = require("../middleware/authStudentToken");
@@ -18,6 +19,7 @@ const authStudentToken = require("../middleware/authStudentToken");
 router.post("/create", authTeacherToken, createAssignment);
 router.get("/pending", getPendingAssignmentsByClass);
 router.get("/pending/:classId", getPendingAssignmentsByClass);
+router.get("/class-stats/:classId", getClassAssignmentStats);
 router.get("/list", getAssignments);
 router.get("/:id", getAssignmentById);
 router.get("/submissions/:assignmentId", authTeacherToken, getSubmissions);

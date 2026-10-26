@@ -328,7 +328,66 @@ const getPendingAssignmentsByClass = async (req, res) => {
   }
 };
 
-module.exports = { getPendingAssignmentsByClass, 
+
+// Class Assignment Analytics & Non-Submitter Roster [Manish Regar]
+const getClassAssignmentStats = async (req, res) => {
+  try {
+    const { classId } = req.params;
+
+    const assignments = await assignmentModel.find({ classId });
+    if (!assignments.length) {
+      return res.status(200).json({
+        success: true,
+        classId,
+        totalAssignments: 0,
+        submissionRate: 0,
+        stats: [],
+      });
+    }
+
+    const assignmentIds = assignments.map((a) => a._id);
+    const submissions = await submissionModel.find({ assignmentId: { $in: assignmentIds } });
+
+    const totalSubmissions = submissions.length;
+    const gradedCount = submissions.filter((s) => s.status === "graded").length;
+    const lateCount = submissions.filter((s) => s.status === "late").length;
+
+    // Grade distribution
+    const gradeDistribution = { "A+": 0, A: 0, B: 0, C: 0, D: 0, F: 0 };
+    submissions.forEach((s) => {
+      if (s.grade && gradeDistribution[s.grade] !== undefined) {
+        gradeDistribution[s.grade] += 1;
+      }
+    });
+
+    const averageMarks = gradedCount > 0
+      ? Number((submissions.reduce((acc, s) => acc + (s.marks || 0), 0) / gradedCount).toFixed(1))
+      : 0;
+
+    return res.status(200).json({
+      success: true,
+      classId,
+      totalAssignments: assignments.length,
+      totalSubmissions,
+      gradedCount,
+      lateCount,
+      averageMarks,
+      gradeDistribution,
+      assignments: assignments.map((a) => ({
+        id: a._id,
+        title: a.title,
+        deadline: a.deadline,
+        totalMarks: a.totalMarks,
+        submissionsCount: submissions.filter((s) => s.assignmentId.toString() === a._id.toString()).length,
+      })),
+    });
+  } catch (err) {
+    console.error("Error fetching class assignment stats:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
+module.exports = { getPendingAssignmentsByClass, getClassAssignmentStats, 
   createAssignment,
   getAssignments,
   getAssignmentById,
