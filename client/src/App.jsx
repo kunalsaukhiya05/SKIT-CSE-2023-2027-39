@@ -32,7 +32,7 @@ const StudentResources = () => <div className="p-10 text-center text-xl font-sem
 const AdminDashboard = () => <div className="p-10 text-center text-xl font-semibold">Admin Dashboard (Coming Soon)</div>;
 const AdminLogin = () => <div className="p-10 text-center text-xl font-semibold">Admin Login (Coming Soon)</div>;
 import StudentAttendance from "./pages/attendance/StudentAttendance";
-const TeacherAttendance = () => <div className="p-10 text-center text-xl font-semibold">Teacher Attendance (Coming Soon)</div>;
+import TeacherAttendance from "./pages/attendance/TeacherAttendance";
 const NotificationsPage = () => <div className="p-10 text-center text-xl font-semibold">Notifications (Coming Soon)</div>;
 // Loading fallback component
 const PageLoader = () => (
@@ -141,6 +141,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
