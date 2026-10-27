@@ -19,3 +19,8 @@ export { default as MeetingFeedbackModal } from './MeetingFeedbackModal';
 export { default as ClassroomHandRaiseQueue } from './ClassroomHandRaiseQueue';
 export { default as LectureRecordingManager } from './LectureRecordingManager';
 export { default as ClassroomScheduleCalendar } from './ClassroomScheduleCalendar';
+export { default as ClassroomFeedbackAnalytics } from './ClassroomFeedbackAnalytics';
+export { default as ClassroomBroadcastBanner } from './ClassroomBroadcastBanner';
+export { default as ClassroomAssignmentQuickDrop } from './ClassroomAssignmentQuickDrop';
+export { default as ClassroomNetworkDiagnostic } from './ClassroomNetworkDiagnostic';
+export { default as ClassroomSessionSummaryModal } from './ClassroomSessionSummaryModal';
