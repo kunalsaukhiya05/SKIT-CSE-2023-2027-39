@@ -387,7 +387,7 @@ const getClassAssignmentStats = async (req, res) => {
   }
 };
 
-module.exports = { getPendingAssignmentsByClass, getClassAssignmentStats, 
+module.exports = { getPendingAssignmentsByClass, getClassAssignmentStats, exportSubmissions, getMyAssignmentGrades, 
   createAssignment,
   getAssignments,
   getAssignmentById,
@@ -399,3 +399,59 @@ module.exports = { getPendingAssignmentsByClass, getClassAssignmentStats,
 };
 
 
+
+
+// Batch Submission CSV Export for Faculty [Manish Regar]
+const exportSubmissions = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    const assignment = await assignmentModel.findById(assignmentId);
+    const submissions = await submissionModel.find({ assignmentId }).sort({ submittedAt: -1 });
+
+    const header = "Student Name,Status,Marks,Max Marks,Grade,Submitted At,Feedback\n";
+    const maxMarks = assignment?.totalMarks || 100;
+    const rows = submissions.map((s) => {
+      const name = (s.studentName || "Student").replace(/,/g, " ");
+      const marks = s.marks !== null ? s.marks : "N/A";
+      const grade = s.grade || "Ungraded";
+      const dateStr = s.submittedAt ? new Date(s.submittedAt).toISOString().slice(0, 10) : "";
+      const fb = (s.feedback || "").replace(/,/g, " ").replace(/\n/g, " ");
+      return `${name},${s.status},${marks},${maxMarks},${grade},${dateStr},${fb}`;
+    }).join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename=assignment-${assignmentId}-submissions.csv`);
+    return res.status(200).send(header + rows);
+  } catch (err) {
+    console.error("Error exporting submissions:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
+// Student Personalized Gradebook & Feedback Roster [Manish Regar]
+const getMyAssignmentGrades = async (req, res) => {
+  try {
+    const studentId = req.studentId;
+    const submissions = await submissionModel
+      .find({ studentId })
+      .populate("assignmentId", "title subject deadline totalMarks")
+      .sort({ submittedAt: -1 });
+
+    const totalSubmitted = submissions.length;
+    const graded = submissions.filter((s) => s.status === "graded");
+    const avgScore = graded.length > 0
+      ? Number((graded.reduce((acc, s) => acc + (s.marks || 0), 0) / graded.length).toFixed(1))
+      : 0;
+
+    return res.status(200).json({
+      success: true,
+      totalSubmitted,
+      gradedCount: graded.length,
+      averageScore: avgScore,
+      submissions,
+    });
+  } catch (err) {
+    console.error("Error fetching student assignment grades:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
