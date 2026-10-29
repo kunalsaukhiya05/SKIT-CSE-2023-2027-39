@@ -1,4 +1,4 @@
-export { default as ClassroomDashboard } from './ClassroomDashboard';
+﻿export { default as ClassroomDashboard } from './ClassroomDashboard';
 export { default as ClassroomLayout } from './ClassroomLayout';
 export { default as ClassSettings } from './ClassSettings';
 export { default as ChatPanel } from './ChatPanel';
@@ -26,3 +26,5 @@ export { default as ClassroomNetworkDiagnostic } from './ClassroomNetworkDiagnos
 export { default as ClassroomSessionSummaryModal } from './ClassroomSessionSummaryModal';
 export { default as ClassroomAudioVisualizer } from './ClassroomAudioVisualizer';
 export { default as ClassroomOfflinePackager } from './ClassroomOfflinePackager';
+
+export { default as RuralTelemetryPill } from './RuralTelemetryPill';
