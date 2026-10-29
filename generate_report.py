@@ -41,7 +41,7 @@ def get_git_metrics(interval="weekly", target_date_str=None):
     git_args = ['git', 'log', '--no-merges', '--pretty=format:COMMIT|||%h|||%an|||%ad|||%s', '--date=short', '--numstat']
 
     if interval == "weekly":
-        since_date = (today - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
+        since_date = (today - datetime.timedelta(days=6)).strftime("%Y-%m-%d")
         until_date = today.strftime("%Y-%m-%d")
         scope_title = f"Last 7 Days ({since_date} to {until_date})"
     elif interval == "monthly":
