@@ -24,3 +24,5 @@ export { default as ClassroomBroadcastBanner } from './ClassroomBroadcastBanner'
 export { default as ClassroomAssignmentQuickDrop } from './ClassroomAssignmentQuickDrop';
 export { default as ClassroomNetworkDiagnostic } from './ClassroomNetworkDiagnostic';
 export { default as ClassroomSessionSummaryModal } from './ClassroomSessionSummaryModal';
+export { default as ClassroomAudioVisualizer } from './ClassroomAudioVisualizer';
+export { default as ClassroomOfflinePackager } from './ClassroomOfflinePackager';
