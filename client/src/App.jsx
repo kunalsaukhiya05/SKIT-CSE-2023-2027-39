@@ -26,7 +26,7 @@ import Classroom from "./pages/Classroom";
 import AIChatbot from "./pages/AIChatBot/AIChatbot";
 import CreateClassForm from "./pages/dashboard/CreateClassForm";
 import TeacherAssignments from "./pages/resourses/TeacherAssignments";
-const StudentAssignment = () => <div className="p-10 text-center text-xl font-semibold">Student Assignments (Coming Soon)</div>;
+import StudentAssignment from "./pages/resourses/StudentAssignment";
 const TeacherResources = () => <div className="p-10 text-center text-xl font-semibold">Resources Module (Coming Soon)</div>;
 const StudentResources = () => <div className="p-10 text-center text-xl font-semibold">Resources Module (Coming Soon)</div>;
 const AdminDashboard = () => <div className="p-10 text-center text-xl font-semibold">Admin Dashboard (Coming Soon)</div>;
@@ -141,6 +141,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
