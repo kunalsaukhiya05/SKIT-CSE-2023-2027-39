@@ -28,7 +28,7 @@ import CreateClassForm from "./pages/dashboard/CreateClassForm";
 import TeacherAssignments from "./pages/resourses/TeacherAssignments";
 import StudentAssignment from "./pages/resourses/StudentAssignment";
 const TeacherResources = () => <div className="p-10 text-center text-xl font-semibold">Resources Module (Coming Soon)</div>;
-const StudentResources = () => <div className="p-10 text-center text-xl font-semibold">Resources Module (Coming Soon)</div>;
+import StudentResources from "./pages/resourses/StudentResources";
 const AdminDashboard = () => <div className="p-10 text-center text-xl font-semibold">Admin Dashboard (Coming Soon)</div>;
 const AdminLogin = () => <div className="p-10 text-center text-xl font-semibold">Admin Login (Coming Soon)</div>;
 import StudentAttendance from "./pages/attendance/StudentAttendance";
@@ -141,6 +141,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
