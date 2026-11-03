@@ -113,7 +113,91 @@ const clearChatHistory = async (req, res) => {
   }
 };
 
+
+// Curriculum-Relevant Starter Prompts for Rural Students [Manish Regar]
+const getSuggestedPrompts = async (req, res) => {
+  try {
+    const { subject } = req.query;
+
+    const SUGGESTIONS = {
+      "Computer Science": [
+        "Explain QuickSort vs MergeSort with an easy analogy",
+        "What are ACID properties in database transactions?",
+        "Difference between process and thread in operating systems?",
+        "How does binary search achieve O(log N) complexity?",
+      ],
+      "Mathematics": [
+        "How to find eigenvalues and eigenvectors of a 2x2 matrix?",
+        "What is the physical interpretation of double integration?",
+        "Explain Taylor series expansion with a practical example",
+        "Step-by-step method to solve first-order differential equations",
+      ],
+      "Physics": [
+        "How does a PN junction diode work in forward bias?",
+        "State and explain Gauss's law in electrostatics",
+        "Difference between spontaneous and stimulated emission in lasers",
+        "Explain the working principle of optical fiber communication",
+      ],
+      "General": [
+        "How should I structure my revision 1 week before university exams?",
+        "Explain the Pomodoro study technique for college students",
+        "Tips to prepare laboratory viva and project defense presentations",
+        "How to write a structured technical lab report?",
+      ],
+    };
+
+    const prompts = (subject && SUGGESTIONS[subject])
+      ? SUGGESTIONS[subject]
+      : Object.values(SUGGESTIONS).flat().slice(0, 8);
+
+    return res.status(200).json({
+      success: true,
+      subject: subject || "All",
+      prompts,
+    });
+  } catch (err) {
+    console.error("Error fetching suggested prompts:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
+// Student Answer Quality Feedback [Manish Regar]
+const submitFeedback = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const { feedback, comment } = req.body;
+
+    if (!["helpful", "unhelpful"].includes(feedback)) {
+      return res.status(400).json({ success: false, message: "Feedback must be 'helpful' or 'unhelpful'" });
+    }
+
+    const chat = await chatModel.findByIdAndUpdate(
+      chatId,
+      {
+        feedback,
+        feedbackComment: comment || "",
+      },
+      { new: true }
+    );
+
+    if (!chat) {
+      return res.status(404).json({ success: false, message: "Chat interaction not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Feedback submitted successfully",
+      feedback: chat.feedback,
+    });
+  } catch (err) {
+    console.error("Error submitting feedback:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
 module.exports = {
+  getSuggestedPrompts,
+  submitFeedback,
   askQuestion,
   getChatHistory,
   clearChatHistory,

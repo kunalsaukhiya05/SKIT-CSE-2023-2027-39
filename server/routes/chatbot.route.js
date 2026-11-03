@@ -4,6 +4,8 @@ const {
   askQuestion,
   getChatHistory,
   clearChatHistory,
+  getSuggestedPrompts,
+  submitFeedback,
 } = require("../contollers/chatbot.controller");
 const authStudentToken = require("../middleware/authStudentToken");
 
@@ -11,5 +13,7 @@ const authStudentToken = require("../middleware/authStudentToken");
 router.post("/ask", authStudentToken, askQuestion);
 router.get("/history", authStudentToken, getChatHistory);
 router.delete("/history", authStudentToken, clearChatHistory);
+router.get("/suggested-prompts", getSuggestedPrompts);
+router.post("/feedback/:chatId", authStudentToken, submitFeedback);
 
 module.exports = router;
