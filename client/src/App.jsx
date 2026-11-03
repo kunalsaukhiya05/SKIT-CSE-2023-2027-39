@@ -33,7 +33,7 @@ const AdminDashboard = () => <div className="p-10 text-center text-xl font-semib
 const AdminLogin = () => <div className="p-10 text-center text-xl font-semibold">Admin Login (Coming Soon)</div>;
 import StudentAttendance from "./pages/attendance/StudentAttendance";
 import TeacherAttendance from "./pages/attendance/TeacherAttendance";
-const NotificationsPage = () => <div className="p-10 text-center text-xl font-semibold">Notifications (Coming Soon)</div>;
+import NotificationsPage from "./pages/notifications/NotificationsPage";
 // Loading fallback component
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -141,6 +141,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
