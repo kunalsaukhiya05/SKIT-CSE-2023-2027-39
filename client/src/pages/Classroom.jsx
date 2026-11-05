@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { useSelector } from "react-redux";
+import { RuralTelemetryPill } from "./classroom";
 
 const Classroom = () => {
   const { id } = useParams();
@@ -145,7 +146,7 @@ const Classroom = () => {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
         <div className="bg-gray-800 rounded-xl p-8 max-w-lg text-center">
-          <div className="text-red-400 text-5xl mb-4">⚠️</div>
+          <div className="text-red-400 text-5xl mb-4">âš ï¸</div>
           <h2 className="text-xl font-bold text-white mb-3">Video Meeting Error</h2>
           <p className="text-gray-300 mb-6">{error}</p>
           <button
@@ -171,19 +172,20 @@ const Classroom = () => {
             {role === "teacher" ? "Teacher" : "Student"}
           </span>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 items-center">
+          <RuralTelemetryPill classId={id} />
           <button
             onClick={handleFullScreen}
             className="bg-teal-600 hover:bg-teal-700 text-white px-2 md:px-3 py-1 rounded text-xs md:text-sm"
           >
-            {isFullScreen ? "Exit ⛶" : "⛶ Full"}
+            {isFullScreen ? "Exit â›¶" : "â›¶ Full"}
           </button>
           {window.screen.orientation && (
             <button
               onClick={handleRotateScreen}
               className="bg-blue-600 hover:bg-blue-700 text-white px-2 md:px-3 py-1 rounded text-xs md:text-sm"
             >
-              {isLandscape ? "↕" : "↔"}
+              {isLandscape ? "â†•" : "â†”"}
             </button>
           )}
         </div>
