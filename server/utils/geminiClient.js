@@ -9,6 +9,49 @@ Your mission:
 5. If the student asks for assignment solutions, guide them through problem-solving steps rather than providing direct copy-paste answers.
 6. Always maintain an encouraging, respectful, and academically sound tone.`;
 
+// Dedicated bilingual prompt templates for rural academic subjects [Manish Regar]
+const ACADEMIC_PROMPT_TEMPLATES = {
+  hi: {
+    systemPrefix: "आप ज्ञानसेतु अकादमिक सहायक हैं। ग्रामीण कॉलेज के छात्रों के लिए सरल और स्पष्ट हिंदी में समझाएं। तकनीकी शब्दों को कोष्ठक में अंग्रेजी में भी लिखें।",
+    queryPrompt: (subject, topic, query) =>
+      `विषय: ${subject || "सामान्य विज्ञान"}\nटॉपिक: ${topic || "अकादमिक प्रश्न"}\nप्रश्न: ${query}\n\nकृपया बिंदुवार (bullet points), सरल उदाहरण, और परीक्षा के लिए महत्वपूर्ण मुख्य बिंदु शामिल करते हुए उत्तर दें।`,
+  },
+  en: {
+    systemPrefix: "You are GyaanSetu Academic Assistant. Explain clearly in structured English suitable for undergraduate engineering and science students.",
+    queryPrompt: (subject, topic, query) =>
+      `Subject: ${subject || "General Academic"}\nTopic: ${topic || "Academic Query"}\nQuestion: ${query}\n\nPlease provide: 1. Core Concept Definition, 2. Step-by-Step Explanation with Analogy, 3. Key Formula/Syntax (if applicable), 4. Quick University Exam Revision Tip.`,
+  },
+  bilingual: {
+    systemPrefix: "You are GyaanSetu Academic Assistant. Explain in a natural Hinglish (bilingual Hindi + English) conversational style that connects deeply with rural students, blending technical English terms with Hindi explanations.",
+    queryPrompt: (subject, topic, query) =>
+      `Subject: ${subject || "General Engineering"}\nTopic: ${topic || "Concept"}\nQuestion: ${query}\n\nKripya simple Hinglish me samjhayein: 1. Asaan bhasha me concept, 2. Real-world rural/daily-life example, 3. Important formula/code logic, 4. Exam tip.`,
+  },
+};
+
+// Curriculum Subject Knowledge Base for Context Ingestion [Manish Regar]
+const SUBJECT_CURRICULUM_CONTEXT = {
+  "Computer Science": {
+    coreAreas: ["Data Structures & Algorithms", "DBMS", "Operating Systems", "Computer Networks", "Software Engineering"],
+    keywords: ["dsa", "tree", "graph", "sql", "dbms", "paging", "tcp", "ip", "oop", "recursion", "stack", "queue"],
+  },
+  "Mathematics": {
+    coreAreas: ["Engineering Mathematics", "Linear Algebra", "Calculus", "Differential Equations", "Probability & Statistics"],
+    keywords: ["matrix", "eigen", "laplace", "fourier", "derivative", "integral", "limit", "vector", "probability"],
+  },
+  "Physics": {
+    coreAreas: ["Engineering Physics", "Semiconductors", "Electromagnetism", "Optics", "Quantum Mechanics"],
+    keywords: ["laser", "diode", "semiconductor", "maxwell", "newton", "optics", "quantum", "fermi", "pn junction"],
+  },
+  "Electrical": {
+    coreAreas: ["Basic Electrical Engineering", "Network Theory", "Transformers", "DC Machines"],
+    keywords: ["kvl", "kcl", "thevenin", "norton", "transformer", "induction", "alternator", "impedance"],
+  },
+  "Civil": {
+    coreAreas: ["Engineering Mechanics", "Strength of Materials", "Fluid Mechanics", "Surveying"],
+    keywords: ["stress", "strain", "bernoulli", "shear", "moment", "surveying", "concrete", "equilibrium"],
+  },
+};
+
 const SUBJECT_FALLBACK_KNOWLEDGE = {
   "computer science": [
     { keywords: ["dsa", "data structure", "algorithm", "complexity", "stack", "queue"], reply: "💡 **Data Structures & Algorithms Overview:**\n- **Arrays/Linked Lists:** Linear structures for contiguous or pointer-based sequence.\n- **Stacks/Queues:** LIFO (recursion, undo) and FIFO (task scheduling).\n- **Trees/Graphs:** Hierarchical non-linear models for searching and networks.\n- **Time Complexity:** O(1) constant, O(log N) divide-and-conquer, O(N) linear, O(N log N) sorting.\n\n*Study Tip: Practice drawing memory layouts on paper when tracing pointers.*" },
@@ -53,8 +96,11 @@ function getIntelligentFallback(query, subject = "") {
   return `🎓 **GyaanSetu AI Academic Guidance:**\n\nRegarding your question: "${query}"\n\n1. **Core Concept:** Break this problem down into fundamental definitions and governing formulas.\n2. **Academic Verification:** Review standard lecture notes or reference textbooks for ${subject || "this subject"}.\n3. **Problem-Solving Framework:** List all known parameters, identify the required target, and verify units.\n\n*(Low-bandwidth offline mode active. Connect to network for real-time Google Gemini 1.5 Flash generation.)*`;
 }
 
-async function callGeminiFlash({ query, history = [], subject = "", language = "en" }) {
+async function callGeminiFlash({ query, history = [], subject = "", topic = "", language = "en" }) {
   const apiKey = process.env.GEMINI_API_KEY;
+  const langKey = ["hi", "bilingual", "en"].includes(language) ? language : "en";
+  const promptTemplate = ACADEMIC_PROMPT_TEMPLATES[langKey] || ACADEMIC_PROMPT_TEMPLATES.en;
+
   if (!apiKey) {
     return {
       reply: getIntelligentFallback(query, subject),
@@ -62,6 +108,7 @@ async function callGeminiFlash({ query, history = [], subject = "", language = "
       tokensUsed: 0,
       model: "offline-fallback",
       latencyMs: 15,
+      languageDetected: langKey,
     };
   }
 
@@ -75,16 +122,10 @@ async function callGeminiFlash({ query, history = [], subject = "", language = "
     }
   }
 
-  const langPrompt = language === "hi"
-    ? "कृपया उत्तर स्पष्ट और सरल हिंदी में दें।"
-    : language === "bilingual"
-    ? "Please explain in a bilingual Hindi + English conversational style suitable for college students."
-    : "Please answer in clear English.";
-
-  const subjectContext = subject ? `Subject Context: ${subject}. ` : "";
+  const engineeredUserPrompt = promptTemplate.queryPrompt(subject, topic, query);
   contents.push({
     role: "user",
-    parts: [{ text: `${subjectContext}${langPrompt}\n\nQuestion: ${query}` }],
+    parts: [{ text: engineeredUserPrompt }],
   });
 
   const startTime = Date.now();
@@ -93,7 +134,7 @@ async function callGeminiFlash({ query, history = [], subject = "", language = "
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         system_instruction: {
-          parts: [{ text: GEMINI_SYSTEM_INSTRUCTION }],
+          parts: [{ text: `${GEMINI_SYSTEM_INSTRUCTION}\n\n${promptTemplate.systemPrefix}` }],
         },
         contents,
         generationConfig: {
@@ -119,6 +160,7 @@ async function callGeminiFlash({ query, history = [], subject = "", language = "
         tokensUsed: 0,
         model: "gemini-1.5-flash",
         latencyMs,
+        languageDetected: langKey,
       };
     }
 
@@ -128,6 +170,7 @@ async function callGeminiFlash({ query, history = [], subject = "", language = "
       tokensUsed,
       model: "gemini-1.5-flash",
       latencyMs,
+      languageDetected: langKey,
     };
   } catch (apiErr) {
     console.warn("Gemini 1.5 Flash API error, falling back to local engine:", apiErr.message);
@@ -137,6 +180,7 @@ async function callGeminiFlash({ query, history = [], subject = "", language = "
       tokensUsed: 0,
       model: "gemini-1.5-flash-fallback",
       latencyMs: Date.now() - startTime,
+      languageDetected: langKey,
     };
   }
 }
@@ -145,4 +189,6 @@ module.exports = {
   callGeminiFlash,
   getIntelligentFallback,
   GEMINI_SYSTEM_INSTRUCTION,
+  ACADEMIC_PROMPT_TEMPLATES,
+  SUBJECT_CURRICULUM_CONTEXT,
 };
