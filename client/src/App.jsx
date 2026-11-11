@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense } from "react";
+﻿import React, { useEffect, useState, lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import Signup from "./pages/auth/Signup";
@@ -24,6 +24,8 @@ import Context from "./context/context";
 
 import Classroom from "./pages/Classroom";
 import AIChatbot from "./pages/AIChatBot/AIChatbot";
+import LeaderboardPage from "./pages/LeaderboardPage";
+import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import CreateClassForm from "./pages/dashboard/CreateClassForm";
 import TeacherAssignments from "./pages/resourses/TeacherAssignments";
 import StudentAssignment from "./pages/resourses/StudentAssignment";
@@ -130,6 +132,8 @@ function App() {
           <Route path="/classroom/:id" element={<Classroom />} />
           <Route path="/live-class/:id" element={<LiveClassRoomPage />} />
           <Route path="/ai-chatbot" element={<AIChatbot />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/analytics" element={<AnalyticsDashboard />} />
           {/* New routes */}
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
@@ -143,6 +147,7 @@ function App() {
 }
 
 export default App;
+
 
 
 

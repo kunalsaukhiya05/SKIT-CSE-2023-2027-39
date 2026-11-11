@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import { Link } from 'react-router-dom'
 import DeadlineAlertBanner from './notifications/DeadlineAlertBanner'
 
@@ -9,6 +9,7 @@ const StudentDashboardHeader = ({ pendingAssignments }) => {
         <h1 className="text-lg md:text-2xl font-bold">Student Dashboard</h1>
         <nav className="space-x-4">
           <Link to="/student-dashboard" className="hover:underline">Dashboard</Link>
+          <Link to="/leaderboard" className="hover:underline">Leaderboard</Link>
           <Link to="/student-profile" className="hover:underline">Profile</Link>
           <Link to="#" className="hover:underline">Logout</Link>
         </nav>
@@ -23,4 +24,5 @@ const StudentDashboardHeader = ({ pendingAssignments }) => {
 }
 
 export default StudentDashboardHeader
+
 

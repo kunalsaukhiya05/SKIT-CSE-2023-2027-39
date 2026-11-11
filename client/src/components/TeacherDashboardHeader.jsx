@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import { Link } from 'react-router-dom'
 
 const TeacherDashboardHeader = () => {
@@ -8,6 +8,8 @@ const TeacherDashboardHeader = () => {
         <h1 className="text-lg md:text-2xl font-bold">Teacher Dashboard</h1>
         <nav className="space-x-4">
           <Link to="/teacher-dashboard" className="hover:underline">Dashboard</Link>
+          <Link to="/analytics" className="hover:underline">Analytics</Link>
+          <Link to="/leaderboard" className="hover:underline">Leaderboard</Link>
           <Link to="/teacher-profile" className="hover:underline">Profile</Link>
           <Link to="#" className="hover:underline">Logout</Link>
         </nav>
@@ -18,3 +20,4 @@ const TeacherDashboardHeader = () => {
 }
 
 export default TeacherDashboardHeader
+
