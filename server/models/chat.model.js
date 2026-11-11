@@ -17,6 +17,11 @@ const chatSchema = new mongoose.Schema({
     trim: true,
     index: true,
   },
+  topic: {
+    type: String,
+    default: "",
+    trim: true,
+  },
   classId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Class",
@@ -35,6 +40,11 @@ const chatSchema = new mongoose.Schema({
     type: String,
     enum: ["en", "hi", "bilingual"],
     default: "en",
+  },
+  complexityLevel: {
+    type: String,
+    enum: ["introductory", "intermediate", "advanced"],
+    default: "intermediate",
   },
   model: {
     type: String,

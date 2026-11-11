@@ -1,15 +1,37 @@
 const chatModel = require("../models/chat.model");
-const { callGeminiFlash } = require("../utils/geminiClient");
+const { callGeminiFlash, SUBJECT_CURRICULUM_CONTEXT } = require("../utils/geminiClient");
+
+// Helper: Detect script or language hints [Manish Regar]
+const detectLanguageAndComplexity = (query, requestedLang) => {
+  const isDevanagari = /[\u0900-\u097F]/.test(query);
+  const isHinglish = /\b(kya|kaise|kyun|batao|samjhao|padhna|karein|hain|hota|hoti)\b/i.test(query);
+
+  let detectedLang = requestedLang || "en";
+  if (isDevanagari) {
+    detectedLang = "hi";
+  } else if (isHinglish && requestedLang !== "en") {
+    detectedLang = "bilingual";
+  }
+
+  // Determine estimated complexity based on query length & technical keywords
+  const advancedKeywords = ["derivation", "proof", "matrix", "eigen", "algorithm", "architecture", "asymptotic", "optimization", "pipeline"];
+  const isAdvanced = advancedKeywords.some((kw) => query.toLowerCase().includes(kw));
+  const complexityLevel = isAdvanced ? "advanced" : query.split(" ").length > 12 ? "intermediate" : "introductory";
+
+  return { detectedLang, complexityLevel };
+};
 
 // Ask Academic Doubt / Query Endpoint [Manish Regar]
 const askQuestion = async (req, res) => {
   try {
     const studentId = req.studentId;
-    const { query, subject = "General", language = "en", classId } = req.body;
+    const { query, subject = "General", topic = "", language = "en", classId } = req.body;
 
     if (!query || !query.trim()) {
       return res.status(400).json({ success: false, message: "Query message is required" });
     }
+
+    const { detectedLang, complexityLevel } = detectLanguageAndComplexity(query.trim(), language);
 
     // Retrieve previous 6 interactions for multi-turn dialogue context
     const recentChats = await chatModel
@@ -31,7 +53,8 @@ const askQuestion = async (req, res) => {
       query: query.trim(),
       history,
       subject,
-      language,
+      topic,
+      language: detectedLang,
     });
 
     const studentName = req.studentName || req.user?.fullName || "Student";
@@ -40,10 +63,12 @@ const askQuestion = async (req, res) => {
       studentId,
       studentName,
       subject,
+      topic,
       classId: classId || null,
       query: query.trim(),
       response: result.reply,
-      language,
+      language: detectedLang,
+      complexityLevel,
       model: result.model,
       source: result.source,
       tokensUsed: result.tokensUsed || 0,
@@ -57,6 +82,8 @@ const askQuestion = async (req, res) => {
       reply: result.reply,
       source: result.source,
       model: result.model,
+      language: detectedLang,
+      complexityLevel,
       tokensUsed: result.tokensUsed,
       latencyMs: result.latencyMs,
       createdAt: chatRecord.createdAt,
@@ -195,8 +222,26 @@ const submitFeedback = async (req, res) => {
   }
 };
 
+// Curriculum subjects and topic index for student selection [Manish Regar]
+const getCurriculumSubjects = async (req, res) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      subjects: Object.keys(SUBJECT_CURRICULUM_CONTEXT).map((name) => ({
+        name,
+        coreAreas: SUBJECT_CURRICULUM_CONTEXT[name].coreAreas,
+        keywords: SUBJECT_CURRICULUM_CONTEXT[name].keywords.slice(0, 5),
+      })),
+    });
+  } catch (err) {
+    console.error("Error fetching curriculum subjects:", err);
+    return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+  }
+};
+
 module.exports = {
   getSuggestedPrompts,
+  getCurriculumSubjects,
   submitFeedback,
   askQuestion,
   getChatHistory,
