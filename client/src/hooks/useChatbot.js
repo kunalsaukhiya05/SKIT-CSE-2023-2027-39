@@ -12,7 +12,10 @@ export const useChatbot = (defaultSubject = "General") => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [suggestedPrompts, setSuggestedPrompts] = useState([]);
+  const [curriculumSubjects, setCurriculumSubjects] = useState([]);
   const [language, setLanguage] = useState("en");
+  const [selectedTopic, setSelectedTopic] = useState("");
+  const [lastComplexity, setLastComplexity] = useState("intermediate");
 
   // Load cached offline session on mount
   useEffect(() => {
@@ -23,6 +26,20 @@ export const useChatbot = (defaultSubject = "General") => {
       }
     } catch (e) {
       console.warn("Failed to parse cached chat messages:", e);
+    }
+  }, []);
+
+  // Fetch curriculum subjects and syllabus topic metadata [Manish Regar]
+  const fetchCurriculum = useCallback(async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}api/chatbot/curriculum-subjects`, {
+        withCredentials: true,
+      });
+      if (response.data.success) {
+        setCurriculumSubjects(response.data.subjects || []);
+      }
+    } catch (err) {
+      console.warn("Curriculum subjects fallback active:", err.message);
     }
   }, []);
 
@@ -41,8 +58,8 @@ export const useChatbot = (defaultSubject = "General") => {
     }
   }, [defaultSubject]);
 
-  // Ask question to Google Gemini 1.5 Flash backend
-  const ask = useCallback(async (query, subject = defaultSubject, lang = language) => {
+  // Ask question to Google Gemini 1.5 Flash backend [Manish Regar]
+  const ask = useCallback(async (query, subject = defaultSubject, lang = language, topic = selectedTopic) => {
     if (!query || !query.trim()) return;
 
     setLoading(true);
@@ -68,10 +85,15 @@ export const useChatbot = (defaultSubject = "General") => {
         {
           query: query.trim(),
           subject,
+          topic,
           language: lang,
         },
         { withCredentials: true }
       );
+
+      if (response.data.complexityLevel) {
+        setLastComplexity(response.data.complexityLevel);
+      }
 
       const aiMessage = {
         role: "assistant",
@@ -79,6 +101,8 @@ export const useChatbot = (defaultSubject = "General") => {
         chatId: response.data.chatId,
         source: response.data.source,
         model: response.data.model,
+        language: response.data.language,
+        complexityLevel: response.data.complexityLevel,
         timestamp: response.data.createdAt || new Date().toISOString(),
       };
 
@@ -139,9 +163,14 @@ export const useChatbot = (defaultSubject = "General") => {
     error,
     language,
     setLanguage,
+    selectedTopic,
+    setSelectedTopic,
+    lastComplexity,
     suggestedPrompts,
+    curriculumSubjects,
     ask,
     fetchPrompts,
+    fetchCurriculum,
     clearHistory,
     submitFeedback,
   };
