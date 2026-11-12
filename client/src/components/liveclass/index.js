@@ -3,3 +3,9 @@ export { default as ResponsiveParticipantGrid } from './ResponsiveParticipantGri
 export { default as LiveClassToolbar } from './LiveClassToolbar';
 export { default as LiveSpeakerSpotlight } from './LiveSpeakerSpotlight';
 export { default as ParticipantRosterScreen } from './ParticipantRosterScreen';
+export { default as LiveReactionsOverlay } from './LiveReactionsOverlay';
+export { default as LiveClassHeaderBar } from './LiveClassHeaderBar';
+export { default as DeviceSwitchQuickMenu } from './DeviceSwitchQuickMenu';
+export { default as ParticipantProfileCardModal } from './ParticipantProfileCardModal';
+export { default as MobileLiveClassDrawer } from './MobileLiveClassDrawer';
+export { default as ReconnectRecoveryBanner } from './ReconnectRecoveryBanner';

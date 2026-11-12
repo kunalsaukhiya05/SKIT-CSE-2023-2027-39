@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, lazy, Suspense } from "react";
+import React, { useEffect, useState, lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import Signup from "./pages/auth/Signup";
@@ -34,6 +34,7 @@ const AdminLogin = () => <div className="p-10 text-center text-xl font-semibold"
 import StudentAttendance from "./pages/attendance/StudentAttendance";
 import TeacherAttendance from "./pages/attendance/TeacherAttendance";
 import NotificationsPage from "./pages/notifications/NotificationsPage";
+import LiveClassRoomPage from "./pages/liveclass/LiveClassRoomPage";
 // Loading fallback component
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -127,6 +128,7 @@ function App() {
           <Route path="/student-resources" element={<StudentResources />} />
           <Route path="/create-class" element={<CreateClassForm />} />
           <Route path="/classroom/:id" element={<Classroom />} />
+          <Route path="/live-class/:id" element={<LiveClassRoomPage />} />
           <Route path="/ai-chatbot" element={<AIChatbot />} />
           {/* New routes */}
           <Route path="/admin-login" element={<AdminLogin />} />
