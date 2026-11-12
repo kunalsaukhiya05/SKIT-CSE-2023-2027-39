@@ -23,6 +23,7 @@ const chatbotRouter = require("./routes/chatbot.route");
 const telemetryRouter = require("./routes/telemetry.route");
 const syncAuditRouter = require("./routes/syncAudit.route");
 const ruralAnalyticsRouter = require("./routes/ruralAnalytics.route");
+const networkAuditRouter = require("./routes/networkAudit.route");
 
 // Database Connection
 DBConnection();
@@ -65,6 +66,7 @@ app.use("/api/chatbot", chatbotRouter);
 app.use("/api/telemetry", telemetryRouter);
 app.use("/api/sync-audit", syncAuditRouter);
 app.use("/api/rural-analytics", ruralAnalyticsRouter);
+app.use("/api/network-audit", networkAuditRouter);
 
 // Health check
 app.get("/", (req, res) => {
@@ -87,5 +89,6 @@ app.use((err, req, res, next) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
 
 
