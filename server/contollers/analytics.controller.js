@@ -187,9 +187,154 @@ const getGradeDistribution = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/analytics/student/:studentId/attendance
+ * MongoDB Aggregation Pipeline for student attendance percentage, monthly trend & warning indicators.
+ * Week 15 — Manish Regar | Remote Classroom for Rural Colleges
+ */
+const getStudentAttendanceAnalytics = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { classId } = req.query;
+    const mongoose = require("mongoose");
+
+    const matchStage = {
+      studentId: new mongoose.Types.ObjectId(studentId),
+    };
+    if (classId) {
+      matchStage.classId = new mongoose.Types.ObjectId(classId);
+    }
+
+    const attendanceStats = await Attendance.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: "$studentId",
+          totalSessions: { $sum: 1 },
+          presentCount: {
+            $sum: { $cond: [{ $eq: ["$status", "present"] }, 1, 0] },
+          },
+          lateCount: {
+            $sum: { $cond: [{ $eq: ["$status", "late"] }, 1, 0] },
+          },
+          absentCount: {
+            $sum: { $cond: [{ $eq: ["$status", "absent"] }, 1, 0] },
+          },
+          lastSessionDate: { $max: "$date" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          studentId: "$_id",
+          totalSessions: 1,
+          presentCount: 1,
+          lateCount: 1,
+          absentCount: 1,
+          effectiveAttendance: { $add: ["$presentCount", { $multiply: ["$lateCount", 0.5] }] },
+          attendancePercentage: {
+            $cond: [
+              { $gt: ["$totalSessions", 0] },
+              {
+                $round: [
+                  {
+                    $multiply: [
+                      {
+                        $divide: [
+                          { $add: ["$presentCount", { $multiply: ["$lateCount", 0.5] }] },
+                          "$totalSessions",
+                        ],
+                      },
+                      100,
+                    ],
+                  },
+                  1,
+                ],
+              },
+              0,
+            ],
+          },
+          lastSessionDate: 1,
+        },
+      },
+      {
+        $addFields: {
+          isAtRisk: { $lt: ["$attendancePercentage", 75] },
+          statusBadge: {
+            $cond: [
+              { $gte: ["$attendancePercentage", 85] },
+              "Excellent",
+              {
+                $cond: [
+                  { $gte: ["$attendancePercentage", 75] },
+                  "Satisfactory",
+                  "Low Attendance Warning",
+                ],
+              },
+            ],
+          },
+        },
+      },
+    ]);
+
+    const monthlyTrend = await Attendance.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date" },
+            month: { $month: "$date" },
+          },
+          total: { $sum: 1 },
+          present: {
+            $sum: { $cond: [{ $in: ["$status", ["present", "late"]] }, 1, 0] },
+          },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+      {
+        $project: {
+          _id: 0,
+          year: "$_id.year",
+          month: "$_id.month",
+          total: 1,
+          present: 1,
+          rate: {
+            $round: [{ $multiply: [{ $divide: ["$present", "$total"] }, 100] }, 1],
+          },
+        },
+      },
+    ]);
+
+    const result = attendanceStats.length > 0
+      ? attendanceStats[0]
+      : {
+          studentId,
+          totalSessions: 0,
+          presentCount: 0,
+          lateCount: 0,
+          absentCount: 0,
+          effectiveAttendance: 0,
+          attendancePercentage: 0,
+          isAtRisk: false,
+          statusBadge: "No Records",
+        };
+
+    return res.status(200).json({
+      success: true,
+      stats: result,
+      monthlyTrend,
+    });
+  } catch (err) {
+    console.error("[analytics] getStudentAttendanceAnalytics error:", err);
+    return res.status(500).json({ success: false, message: "Internal server error", error: err.message });
+  }
+};
+
 module.exports = {
   getClassroomEngagement,
   getQuizScoreTrend,
   getAttendanceHeatmap,
   getGradeDistribution,
+  getStudentAttendanceAnalytics,
 };
