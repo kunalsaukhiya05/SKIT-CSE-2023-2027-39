@@ -11,6 +11,7 @@
 const QuizAttempt = require("../models/quizAttempt.model");
 const Attendance = require("../models/attendance.model");
 const Assignment = require("../models/assignment.model");
+const Submission = require("../models/submission.model");
 const GradebookEntry = require("../models/gradebook.model");
 const Classroom = require("../models/class.model");
 
@@ -331,10 +332,150 @@ const getStudentAttendanceAnalytics = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/analytics/student/:studentId/assignments
+ * MongoDB Aggregation Pipeline for student assignment completion rate, on-time ratio & grading metrics.
+ * Week 15 — Manish Regar | Remote Classroom for Rural Colleges
+ */
+const getStudentAssignmentCompletionAnalytics = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { classId } = req.query;
+    const mongoose = require("mongoose");
+
+    const studentObjId = new mongoose.Types.ObjectId(studentId);
+
+    // 1. Fetch total assignments published for the class/all classes
+    const assignmentFilter = { status: { $ne: "draft" } };
+    if (classId) {
+      assignmentFilter.classId = new mongoose.Types.ObjectId(classId);
+    }
+    const totalAssignments = await Assignment.countDocuments(assignmentFilter);
+
+    // 2. Aggregate student submissions
+    const submissionStats = await Submission.aggregate([
+      {
+        $match: {
+          studentId: studentObjId,
+        },
+      },
+      {
+        $lookup: {
+          from: "assignments",
+          localField: "assignmentId",
+          foreignField: "_id",
+          as: "assignmentDetails",
+        },
+      },
+      { $unwind: "$assignmentDetails" },
+      ...(classId
+        ? [
+            {
+              $match: {
+                "assignmentDetails.classId": new mongoose.Types.ObjectId(classId),
+              },
+            },
+          ]
+        : []),
+      {
+        $group: {
+          _id: "$studentId",
+          totalSubmitted: { $sum: 1 },
+          gradedCount: {
+            $sum: { $cond: [{ $eq: ["$status", "graded"] }, 1, 0] },
+          },
+          lateSubmissions: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $eq: ["$status", "late"] },
+                    { $gt: ["$submittedAt", "$assignmentDetails.deadline"] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          onTimeSubmissions: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $ne: ["$status", "late"] },
+                    { $lte: ["$submittedAt", "$assignmentDetails.deadline"] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          avgScore: {
+            $avg: {
+              $cond: [{ $ne: ["$marks", null] }, "$marks", "$$REMOVE"],
+            },
+          },
+          lastSubmissionDate: { $max: "$submittedAt" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          studentId: "$_id",
+          totalSubmitted: 1,
+          gradedCount: 1,
+          lateSubmissions: 1,
+          onTimeSubmissions: 1,
+          avgScore: { $round: [{ $ifNull: ["$avgScore", 0] }, 1] },
+          lastSubmissionDate: 1,
+        },
+      },
+    ]);
+
+    const submitted = submissionStats.length > 0 ? submissionStats[0].totalSubmitted : 0;
+    const pending = Math.max(0, totalAssignments - submitted);
+    const completionPct = totalAssignments > 0
+      ? Math.round((submitted / totalAssignments) * 1000) / 10
+      : 0;
+
+    const baseStats = submissionStats.length > 0
+      ? submissionStats[0]
+      : {
+          studentId,
+          totalSubmitted: 0,
+          gradedCount: 0,
+          lateSubmissions: 0,
+          onTimeSubmissions: 0,
+          avgScore: 0,
+          lastSubmissionDate: null,
+        };
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        ...baseStats,
+        totalAssigned: totalAssignments,
+        pendingAssignments: pending,
+        completionPercentage: completionPct,
+        onTimeRate: submitted > 0
+          ? Math.round((baseStats.onTimeSubmissions / submitted) * 1000) / 10
+          : 0,
+        isPunctual: baseStats.lateSubmissions === 0,
+      },
+    });
+  } catch (err) {
+    console.error("[analytics] getStudentAssignmentCompletionAnalytics error:", err);
+    return res.status(500).json({ success: false, message: "Internal server error", error: err.message });
+  }
+};
+
 module.exports = {
   getClassroomEngagement,
   getQuizScoreTrend,
   getAttendanceHeatmap,
   getGradeDistribution,
   getStudentAttendanceAnalytics,
+  getStudentAssignmentCompletionAnalytics,
 };
