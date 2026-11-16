@@ -525,7 +525,7 @@ const syncBatchOfflineAttendance = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: Successfully synchronized ${results.length} offline attendance records,
+      message: `Successfully synchronized ${results.length} offline attendance records`,
       syncedCount: results.length,
       records: results,
     });

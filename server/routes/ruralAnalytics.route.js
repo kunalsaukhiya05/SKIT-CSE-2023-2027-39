@@ -2,6 +2,7 @@
 const router = express.Router();
 const { getClassroomConnectivityReport } = require("../contollers/ruralAnalytics.controller");
 
-router.get("/report/:classId?", getClassroomConnectivityReport);
+router.get("/report", getClassroomConnectivityReport);
+router.get("/report/:classId", getClassroomConnectivityReport);
 
 module.exports = router;

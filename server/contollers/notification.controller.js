@@ -176,7 +176,7 @@ const broadcastEmergencyAlert = async (req, res) => {
     }
 
     const notification = await notificationModel.create({
-      title: [EMERGENCY] ${title},
+      title: `[EMERGENCY] ${title}`,
       message,
       type: "announcement",
       recipientType: "all",

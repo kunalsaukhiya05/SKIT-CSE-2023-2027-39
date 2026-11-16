@@ -387,20 +387,6 @@ const getClassAssignmentStats = async (req, res) => {
   }
 };
 
-module.exports = { getPendingAssignmentsByClass, getClassAssignmentStats, exportSubmissions, getMyAssignmentGrades, 
-  createAssignment,
-  getAssignments,
-  getAssignmentById,
-  submitAssignment,
-  getSubmissions,
-  getStudentSubmissions,
-  gradeSubmission,
-  deleteAssignment,
-};
-
-
-
-
 // Batch Submission CSV Export for Faculty [Manish Regar]
 const exportSubmissions = async (req, res) => {
   try {
@@ -455,3 +441,19 @@ const getMyAssignmentGrades = async (req, res) => {
     return res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
   }
 };
+
+module.exports = {
+  getPendingAssignmentsByClass,
+  getClassAssignmentStats,
+  exportSubmissions,
+  getMyAssignmentGrades,
+  createAssignment,
+  getAssignments,
+  getAssignmentById,
+  submitAssignment,
+  getSubmissions,
+  getStudentSubmissions,
+  gradeSubmission,
+  deleteAssignment,
+};
+
