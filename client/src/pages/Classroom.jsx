@@ -2,7 +2,7 @@
 import { useParams } from "react-router-dom";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { useSelector } from "react-redux";
-import { RuralTelemetryPill } from "./classroom";
+import RuralTelemetryPill from "./classroom/RuralTelemetryPill";
 
 const Classroom = () => {
   const { id } = useParams();
@@ -202,3 +202,4 @@ const Classroom = () => {
 };
 
 export default Classroom;
+

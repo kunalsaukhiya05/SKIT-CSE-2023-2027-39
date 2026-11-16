@@ -1,9 +1,9 @@
-/**
+﻿/**
  * useLeaderboard.js
  * Custom React hook for fetching and managing classroom leaderboard data.
  * Supports filtering by classId, date range, and category (quiz / attendance / overall).
  *
- * Sprint Week 13 (Nov 6-12, 2026) — Rishabh Jain
+ * Sprint Week 13 (Nov 6-12, 2026) â€” Rishabh Jain
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -38,7 +38,7 @@ const CACHE_TTL = 60_000;
  * @returns {{ entries: LeaderboardEntry[], loading: boolean, error: string|null, refresh: Function }}
  */
 export function useLeaderboard({ classId, category = 'overall', from = '', to = '' } = {}) {
-  const { token } = useContext(AppContext);
+  const ctx = useContext(AppContext); const token = ctx?.token || localStorage.getItem("StudentToken") || localStorage.getItem("TeacherToken");
 
   const [entries, setEntries] = useState([]);
   const [loading, setLoading]  = useState(false);
@@ -99,3 +99,4 @@ export function useLeaderboard({ classId, category = 'overall', from = '', to = 
 
   return { entries, loading, error, refresh: fetchLeaderboard };
 }
+

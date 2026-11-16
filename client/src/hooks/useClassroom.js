@@ -63,3 +63,6 @@ export const useClassroom = () => {
         uniqueSubjects, fetchClasses, joinClass
     };
 };
+
+export default useClassroom;
+
