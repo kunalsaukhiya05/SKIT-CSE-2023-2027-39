@@ -471,6 +471,174 @@ const getStudentAssignmentCompletionAnalytics = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/analytics/classroom/:classroomId/performance-summary
+ * Multi-stage MongoDB Facet Aggregation for Teacher Dashboard.
+ * Returns overall classroom attendance %, assignment submission completion %, and at-risk student roster.
+ * Week 15 — Manish Regar | Remote Classroom for Rural Colleges
+ */
+const getClassroomPerformanceSummary = async (req, res) => {
+  try {
+    const { classroomId } = req.params;
+    const mongoose = require("mongoose");
+    const classObjId = new mongoose.Types.ObjectId(classroomId);
+
+    // 1. Classroom Attendance Aggregation
+    const attendanceStats = await Attendance.aggregate([
+      { $match: { classId: classObjId } },
+      {
+        $group: {
+          _id: null,
+          totalRecords: { $sum: 1 },
+          presentRecords: {
+            $sum: { $cond: [{ $eq: ["$status", "present"] }, 1, 0] },
+          },
+          lateRecords: {
+            $sum: { $cond: [{ $eq: ["$status", "late"] }, 1, 0] },
+          },
+          uniqueStudents: { $addToSet: "$studentId" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalRecords: 1,
+          presentRecords: 1,
+          lateRecords: 1,
+          totalEnrolled: { $size: "$uniqueStudents" },
+          overallAttendancePct: {
+            $cond: [
+              { $gt: ["$totalRecords", 0] },
+              {
+                $round: [
+                  {
+                    $multiply: [
+                      {
+                        $divide: [
+                          { $add: ["$presentRecords", { $multiply: ["$lateRecords", 0.5] }] },
+                          "$totalRecords",
+                        ],
+                      },
+                      100,
+                    ],
+                  },
+                  1,
+                ],
+              },
+              0,
+            ],
+          },
+        },
+      },
+    ]);
+
+    // 2. Classroom Assignment Completion Aggregation
+    const totalAssignments = await Assignment.countDocuments({
+      classId: classObjId,
+      status: { $ne: "draft" },
+    });
+
+    const assignmentSubmissions = await Submission.aggregate([
+      {
+        $lookup: {
+          from: "assignments",
+          localField: "assignmentId",
+          foreignField: "_id",
+          as: "assignment",
+        },
+      },
+      { $unwind: "$assignment" },
+      { $match: { "assignment.classId": classObjId } },
+      {
+        $group: {
+          _id: null,
+          totalSubmissions: { $sum: 1 },
+          onTimeCount: {
+            $sum: {
+              $cond: [
+                { $lte: ["$submittedAt", "$assignment.deadline"] },
+                1,
+                0,
+              ],
+            },
+          },
+          gradedCount: {
+            $sum: { $cond: [{ $eq: ["$status", "graded"] }, 1, 0] },
+          },
+          avgScore: { $avg: "$marks" },
+        },
+      },
+    ]);
+
+    // 3. At-Risk Students Aggregation (Attendance < 75%)
+    const atRiskStudents = await Attendance.aggregate([
+      { $match: { classId: classObjId } },
+      {
+        $group: {
+          _id: "$studentId",
+          studentName: { $first: "$studentName" },
+          total: { $sum: 1 },
+          attended: {
+            $sum: { $cond: [{ $in: ["$status", ["present", "late"]] }, 1, 0] },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          studentId: "$_id",
+          studentName: 1,
+          total: 1,
+          attended: 1,
+          percentage: {
+            $round: [{ $multiply: [{ $divide: ["$attended", "$total"] }, 100] }, 1],
+          },
+        },
+      },
+      { $match: { percentage: { $lt: 75 } } },
+      { $sort: { percentage: 1 } },
+      { $limit: 10 },
+    ]);
+
+    const attSummary = attendanceStats[0] || {
+      totalRecords: 0,
+      presentRecords: 0,
+      lateRecords: 0,
+      totalEnrolled: 0,
+      overallAttendancePct: 0,
+    };
+
+    const subSummary = assignmentSubmissions[0] || {
+      totalSubmissions: 0,
+      onTimeCount: 0,
+      gradedCount: 0,
+      avgScore: 0,
+    };
+
+    const expectedSubmissions = attSummary.totalEnrolled * totalAssignments;
+    const assignmentCompletionPct = expectedSubmissions > 0
+      ? Math.round((subSummary.totalSubmissions / expectedSubmissions) * 1000) / 10
+      : 0;
+
+    return res.status(200).json({
+      success: true,
+      classroomId,
+      attendance: attSummary,
+      assignments: {
+        totalAssignments,
+        totalSubmissions: subSummary.totalSubmissions,
+        assignmentCompletionPct,
+        onTimeSubmissions: subSummary.onTimeCount,
+        averageScore: Math.round((subSummary.avgScore || 0) * 10) / 10,
+      },
+      atRiskStudents,
+    });
+  } catch (err) {
+    console.error("[analytics] getClassroomPerformanceSummary error:", err);
+    return res.status(500).json({ success: false, message: "Internal server error", error: err.message });
+  }
+};
+
 module.exports = {
   getClassroomEngagement,
   getQuizScoreTrend,
@@ -478,4 +646,5 @@ module.exports = {
   getGradeDistribution,
   getStudentAttendanceAnalytics,
   getStudentAssignmentCompletionAnalytics,
+  getClassroomPerformanceSummary,
 };

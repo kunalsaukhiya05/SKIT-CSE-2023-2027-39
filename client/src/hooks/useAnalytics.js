@@ -27,6 +27,7 @@ const useAnalytics = (classroomId) => {
   const [quizTrend, setQuizTrend] = useState(null);
   const [heatmap, setHeatmap] = useState(null);
   const [gradeDistribution, setGradeDistribution] = useState(null);
+  const [performanceSummary, setPerformanceSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -57,6 +58,11 @@ const useAnalytics = (classroomId) => {
         url: `${BASE}/classroom/${classroomId}/grade-distribution`,
         setter: (data) => setGradeDistribution(data.distribution),
       },
+      {
+        key: "performanceSummary",
+        url: `${BASE}/classroom/${classroomId}/performance-summary`,
+        setter: setPerformanceSummary,
+      },
     ];
 
     const newErrors = {};
@@ -86,6 +92,7 @@ const useAnalytics = (classroomId) => {
     quizTrend,
     heatmap,
     gradeDistribution,
+    performanceSummary,
     loading,
     errors,
     refresh: fetchAll,
